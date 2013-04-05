@@ -1,0 +1,7 @@
+[
+	{
+		"name" : "[song name]",
+		"paths" : ["[song paths go here]"]
+	}
+]
+// Will select random song from each name
