@@ -74,6 +74,10 @@ public class Level {
 		public Sprite getSprite() {
 			return SpriteEngine.getSprite(name);
 		}
+		
+		public BufferedImage getImage() {
+			return null;
+		}
 	}
 	
 	private BufferedImage background;
@@ -139,8 +143,8 @@ public class Level {
 	}
 	
 	public Tile getTile(int x, int y) {
-		if(x < 0 || x >= width) throw new IndexOutOfBoundsException();
-		if(y < 0 || y >= width) throw new IndexOutOfBoundsException();
+		if(x < 0 || x >= width) return null;
+		if(y < 0 || y >= height) return null;
 		return map[y][x];
 	}
 	

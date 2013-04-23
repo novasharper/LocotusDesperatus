@@ -38,7 +38,7 @@ public class HUD extends GameContext {
 		healthBarWidth = 400;
 		hudWidth = 400;
 		hudHeight = 100;
-		hudColor = new Color(.3f, .7f, 1f, .5f);
+		hudColor = new Color(.3f, .7f, 1f, .75f);
 		displayColor = new Color(.16f, 1f, 1f, 1f);
 		dAmmoDraw = 50;
 	}
@@ -82,7 +82,7 @@ public class HUD extends GameContext {
 		font.draw(sb, "", 0, 0);
 		
 		// Draw weapon ammo
-		int drawX = GameComponent.getGame().width - dAmmoDraw - 10;
+		int drawX = Gdx.graphics.getWidth() - dAmmoDraw - 10;
 		if(hudWeapon.getReserve() == 0) font.setColor(Color.RED);
 		font.draw(sb, "" + hudWeapon.getReserve(), drawX, Gdx.graphics.getHeight() - 45 - font.getCapHeight());
 		font.setColor(displayColor);

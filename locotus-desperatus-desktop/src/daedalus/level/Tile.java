@@ -112,4 +112,8 @@ public class Tile implements Comparable<Tile> {
 	public Sprite getSprite() {
 		return info.getSprite();
 	}
+	
+	public TileInfo getInfo() {
+		return info;
+	}
 }

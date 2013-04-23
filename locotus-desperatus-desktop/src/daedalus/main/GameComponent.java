@@ -44,7 +44,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	private boolean running;
 	private Thread gameThread;
 	public static final double framerate = 60;
-	public static final int tileSize = 64;
+	public static final int tileSize = 128;
 	private LinkedList<GameContext> gameContextStack;
 	private LinkedList<KeyEvent> keyEventQueue;
 	private Gamepad gamepad;
@@ -317,14 +317,17 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 				gameContextStack.get(first).render(sb, sr);
 			}
 		}
-		sr.begin(ShapeType.Filled);
-		sr.setColor(1, 1, 0, 1);
-		sr.rect(0, Gdx.graphics.getHeight() - 35, Math.max(fpsFont.getBounds("" + Gdx.graphics.getFramesPerSecond()).width + 30, 80), 35);
-		sr.end();
-		sb.begin();
-		fpsFont.setColor(1, 0, 0, 1);
-		fpsFont.draw(sb, "" + Gdx.graphics.getFramesPerSecond(), 15, Gdx.graphics.getHeight() - (35 - fpsFont.getCapHeight()) / 2f);
-		sb.end();
+		if(showFPS) {
+			sr.begin(ShapeType.Filled);
+			sr.setColor(1, 1, 0, 1);
+			sr.rect(0, Gdx.graphics.getHeight() - 35, Math.max(fpsFont.getBounds("" + Gdx.graphics.getFramesPerSecond()).width + 30, 80), 35);
+			sr.end();
+			sb.begin();
+			fpsFont.setColor(1, 0, 0, 1);
+			fpsFont.draw(sb, "" + Gdx.graphics.getFramesPerSecond(),
+					15, Gdx.graphics.getHeight() - (35 - fpsFont.getCapHeight()) / 2f);
+			sb.end();
+		}
 	}
 	public void pause() {
 		setPaused(true);

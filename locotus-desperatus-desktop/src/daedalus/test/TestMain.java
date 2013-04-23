@@ -33,6 +33,7 @@ public class TestMain extends GameContext {
 	private static Character chief;
 	private static NPC other;
 	public static TestMain tm;
+	private int xRadius, yRadius;
 	
 	public static Entity getHero() {
 		return chief;
@@ -47,8 +48,6 @@ public class TestMain extends GameContext {
 		chief.setY(5.5);
 		chief.equip(new IR32(chief));
 		try {
-			SpriteEngine.loadSprite("chief.sprite", "test/res/sprite.png");
-			SpriteEngine.loadSprite("ir32.sprite", "test/res/rifle.png");
 			SpriteEngine.loadSprite("ir32.hudsprite", "test/res/rifle_hud.png");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -59,37 +58,44 @@ public class TestMain extends GameContext {
 	@Override
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
 		sr.begin(ShapeType.Filled);
-		sr.setColor(0.7f, 0.8f, 1f, 1f);
-		sr.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		sr.setColor(Color.BLACK);
-		for(int r = 0; r < map.getHeight(); r++) {
-			for(int c = 0; c < map.getWidth(); c++) {
-				if(!map.getTile(c, r).isPassable()) {
-					sr.rect(c * GameComponent.tileSize, r * GameComponent.tileSize, GameComponent.tileSize, GameComponent.tileSize);
+		sr.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		sr.setColor(0.7f, 0.8f, 1f, 1f);
+		float fuzzX = (float) chief.getLoc().x % 2;
+		float fuzzY = (float) chief.getLoc().y % 2;
+		if (Math.abs(fuzzX) > 1)
+			fuzzX = fuzzX % 1f;
+		if (Math.abs(fuzzY) > 1)
+			fuzzY = fuzzY % 1f;
+		
+		for(int r = -yRadius; r <= yRadius; r++) {
+			for(int c = -xRadius; c <= xRadius; c++) {
+				Tile tile = map.getTile(c + (int) chief.getLoc().x, r + (int) chief.getLoc().y);
+				if(tile == null || !tile.isPassable()) {
+					sr.rect((float) chief.getDrawX() + (c - fuzzX) * GameComponent.tileSize,
+							(float) chief.getDrawY() + (r - fuzzY) * GameComponent.tileSize,
+							GameComponent.tileSize, GameComponent.tileSize);
 				}
 			}
 		}
 		sr.end();
 		chief.render(sb, sr);
-		other.render(sb, sr);
 	}
 	
 	public void init() {
-		map = new Level((int) (GameComponent.getGame().width / GameComponent.tileSize),
-				GameComponent.getGame().height / GameComponent.tileSize);
+		xRadius = (int) (GameComponent.getGame().width / GameComponent.tileSize) / 2 + 1;
+		yRadius = (int) (GameComponent.getGame().height / GameComponent.tileSize) / 2 + 1;
+		map = new Level(30, 20);
 		for(int r = 0; r < map.getHeight(); r++) {
 			for(int c = 0; c < map.getWidth(); c++) {
 				map.getTile(c, r).setPassable(Math.random() < .8);
 			}
 		}
-		Point[] path = Pathfinding.ASTAR(map, map.getTile(0, 0), map.getTile(map.getWidth() - 1, map.getHeight() - 1));
-		
-		other.setPath(new Path(path, true, true));
+		Physics.setLevel(map);
 	}
 	
 	public void tick() {
 		chief.tick();
-		other.tick();
 	}
 	
 	public Tile getTile(int x, int y) {

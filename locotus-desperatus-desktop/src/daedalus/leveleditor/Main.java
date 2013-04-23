@@ -28,6 +28,8 @@ import javax.swing.JFrame;
 import javax.swing.JToggleButton;
 
 import daedalus.level.Level;
+import daedalus.level.Tile;
+import daedalus.level.Level.TileInfo;
 
 
 public class Main extends JFrame {
@@ -39,16 +41,16 @@ public class Main extends JFrame {
 	private ToolBox other;
 	private MainCanvas canvas;
 	private Level level;
-	private int[][] types;
+	private Tile[][] tiles;
 	
 	public Main() {
-		types = new int[height][width];
+		level = new Level(width, height);
+		tiles = new Tile[height][width];
 		for(int i = 0; i < height; i++) {
 			for(int i2 = 0; i2 < width; i2++) {
-				types[i][i2] = -1;
+				tiles[i][i2] = null;
 			}
 		}
-		
 		setTitle("Level Editor");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		canvas = new MainCanvas();
@@ -87,22 +89,22 @@ public class Main extends JFrame {
 	
 	private void handleClick(Point p, int mouseButton) {
 		if(mouseButton == 3) {
-			types[p.y][p.x] = -1;
+			tiles[p.y][p.x] = null;
 		} else {
 			selected = p;
 			if(other.mode == ToolBox.PAINT) {
-				types[selected.y][selected.x] = other.selected;
+				tiles[selected.y][selected.x] = other.getSelectedTile();
 			}
 		}
 		canvas.repaint();
 		other.repaint();
 	}
 	
-	public int getTypeForSelected() {
+	public Tile getTypeForSelected() {
 		if(selected != null) {
-			return types[selected.y][selected.x];
+			return tiles[selected.y][selected.x];
 		}
-		return -1;
+		return null;
 	}
 	
 	private class ToolBox extends JFrame {
@@ -120,6 +122,37 @@ public class Main extends JFrame {
 		public ToolBox() {
 			setSize(250, 600);
 			setUndecorated(true);
+			
+			numElements = 10;
+			sprites = new BufferedImage[numElements];
+			try {
+				BufferedImage ss = ImageIO.read(Main.class.getResourceAsStream("/data/chars.png"));
+				for(int i = 0; i < ss.getWidth() / 32; i++) {
+					sprites[i] = ss.getSubimage(i * 32, 0, 32, 32);
+				}
+			} catch(Exception ex) {
+			}
+			addMouseListener(new MouseAdapter() {
+				public void mouseReleased(MouseEvent arg0) {
+					Point p = arg0.getPoint();
+					p.x = (p.x - tl.x) / (ts + 5);
+					p.y = (p.y - tl.y) / (ts + 5);
+					int selected;
+					if(p.x > width - 1 || p.y > numElements / width || (p.x + p.y * width) > numElements) selected = -1;
+					else selected = p.x + p.y * width;
+					if(Main.this.selected != null && mode == EDIT) {
+						tiles[Main.this.selected.y][Main.this.selected.x] = getSelectedTile();
+					}
+					other.selected = selected;
+					repaint();
+					Main.this.canvas.repaint();
+				}
+			});
+			mode = PAINT;
+			initSwing();
+		}
+		
+		private void initSwing() {
 			setLayout(null);
 			editBTN = new JToggleButton("Edit");
 			editBTN.setBounds(10, 100, 230, 35);
@@ -146,34 +179,10 @@ public class Main extends JFrame {
 			});
 			
 			paintBTN.doClick();
-			
-			numElements = 10;
-			sprites = new BufferedImage[numElements];
-			try {
-				BufferedImage ss = ImageIO.read(Main.class.getResourceAsStream("/data/chars.png"));
-				for(int i = 0; i < ss.getWidth() / 32; i++) {
-					sprites[i] = ss.getSubimage(i * 32, 0, 32, 32);
-				}
-			} catch(Exception ex) {
-			}
-			addMouseListener(new MouseAdapter() {
-				public void mouseReleased(MouseEvent arg0) {
-					Point p = arg0.getPoint();
-					int button = arg0.getButton();
-					p.x = (p.x - tl.x) / (ts + 5);
-					p.y = (p.y - tl.y) / (ts + 5);
-					int selected;
-					if(p.x > width - 1 || p.y > numElements / width || (p.x + p.y * width) > numElements) selected = -1;
-					else selected = p.x + p.y * width;
-					if(Main.this.selected != null) {
-						types[Main.this.selected.y][Main.this.selected.x] = selected;
-					}
-					other.selected = selected;
-					repaint();
-					Main.this.canvas.repaint();
-				}
-			});
-			mode = PAINT;
+		}
+		
+		public Tile getSelectedTile() {
+			return null;
 		}
 		
 		private void drawSprite(Object sprite, int number, Graphics gr, boolean selected) {
@@ -195,7 +204,7 @@ public class Main extends JFrame {
 			gr_.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			gr_.setColor(Color.red);
 			gr_.fillRect(0, 0, getWidth(), getHeight());
-			for(int i = 0; i < numElements; i++) drawSprite(null, i, gr_, i == ((mode == EDIT) ? getTypeForSelected() : selected));
+			for(int i = 0; i < numElements; i++) drawSprite(null, i, gr_, false);//i == ((mode == EDIT) ? getTypeForSelected() : selected));
 			gr.drawImage(img, 0, 0, this);
 			paintBTN.repaint();
 			editBTN.repaint();
@@ -223,9 +232,13 @@ public class Main extends JFrame {
 			gr_.fillRect(0, 0, getWidth(), getHeight());
 			for(int y = 0; y < height; y++) {
 				for(int x = 0; x < width; x++) {
-					if(types[y][x] != -1) {
+					Tile tile = level.getTile(x, y);
+					if(tile != null) {
 						gr_.setColor(Color.white);
-						gr_.drawImage(other.sprites[types[y][x]], x * ts, y * ts, Main.this);
+						TileInfo info = tile.getInfo();
+						if(info != null) {
+							gr_.drawImage(info.getImage(), x * ts, y * ts, Main.this);
+						}
 					}
 					if(x != 0) {
 						gr_.setColor(Color.white);

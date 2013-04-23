@@ -3,12 +3,17 @@ package daedalus.entity;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL10;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
+import daedalus.Physics;
 import daedalus.combat.Weapon;
 import daedalus.graphics.GraphicsElement;
-import daedalus.graphics.SpriteEngine;
 import daedalus.main.GameComponent;
 import daedalus.test.TestMain;
 
@@ -21,6 +26,16 @@ public abstract class Entity implements GraphicsElement {
 	protected float maxHealth;
 	protected long lastDamage;
 	protected LinkedList<Weapon> arms;
+	protected int colorIndex = 5;
+	
+	private static final Color[][] colorSet = {
+		{ new Color(0.75f, 0f, 0f, 0.9f), new Color(1, 0, 0, 1) },
+		{ new Color(0f, 0.75f, 0f, 0.9f), new Color(0, 1, 0, 1) },
+		{ new Color(0f, 0f, 0.75f, 0.9f), new Color(0, 0, 1, 1) },
+		{ new Color(0.75f, 0.75f, 0f, 0.9f), new Color(1, 1, 0, 1) },
+		{ new Color(0f, 0.75f, 0.75f, 0.9f), new Color(0, 1, 1, 1) },
+		{ new Color(0.75f, 0f, 0.75f, 0.9f), new Color(1, 0, 1, 1) }
+	};
 	
 	public Entity(String name, float maxHealth) {
 		this.name = name;
@@ -41,10 +56,29 @@ public abstract class Entity implements GraphicsElement {
 		arms.addFirst(weapon);
 	}
 	
+	private void tri(ShapeRenderer sr, float size, ShapeType type) {
+		Point2D.Double loc = getDrawLoc();
+		sr.begin(type);
+		sr.triangle((float) loc.x + size * (float) Math.cos(getRot()), (float) loc.y + size * (float) Math.sin(getRot()),
+				(float) loc.x + size * (float) Math.cos(getRot() - 5 * Math.PI / 4),
+				(float) loc.y + size * (float) Math.sin(getRot() - 5 * Math.PI / 4),
+				
+				(float) loc.x + size * (float) Math.cos(getRot() + 5 * Math.PI / 4),
+				(float) loc.y + size * (float) Math.sin(getRot() + 5 * Math.PI / 4));
+		sr.end();
+	}
+	
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
-//			if(!arms.isEmpty())
-//				arms.getFirst().render(sb, sr);
-			SpriteEngine.getSprite(getSpriteName()).render(sb, getDrawLoc(), (3 * Math.PI / 2 + getRot()) * 180 / Math.PI);
+		Gdx.gl.glEnable(GL20.GL_BLEND);
+		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+		sr.setColor(colorSet[colorIndex][0]);
+		tri(sr, 20, ShapeType.Filled);
+		sr.setColor(colorSet[colorIndex][1]);
+		tri(sr, 20, ShapeType.Line);
+		sr.begin(ShapeType.Filled);
+		sr.circle((float) getDrawX(), (float) getDrawY(), 2);
+		sr.end();
+		Gdx.gl.glDisable(GL20.GL_BLEND);
 	}
 	
 	public void tick() {
@@ -52,18 +86,10 @@ public abstract class Entity implements GraphicsElement {
 	}
 	
 	public double getDrawX() {
-		return GameComponent.tileSize * (getLoc().x) - SpriteEngine.getSprite(getSpriteName()).getWidth() / 2;
-	}
-	
-	public double getDrawY() {
-		return GameComponent.tileSize * (getLoc().y) - SpriteEngine.getSprite(getSpriteName()).getHeight() / 2;
-	}
-	
-	public double getDrawCX() {
 		return GameComponent.tileSize * (getLoc().x);
 	}
 	
-	public double getDrawCY() {
+	public double getDrawY() {
 		return GameComponent.tileSize * (getLoc().y);
 	}
 	
@@ -149,8 +175,8 @@ public abstract class Entity implements GraphicsElement {
 		if(y0 < y1) ystep = 1;
 		else ystep = -1;
 		for(int x = x0; x <= x1; x++) {
-			if(steep) { if(!TestMain.tm.getTile(y, x).isPassable()) return false; }
-			else if(!TestMain.tm.getTile(x, y).isPassable()) return false;
+			if(steep) { if(!Physics.getLevel().getTile(y, x).isPassable()) return false; }
+			else if(!Physics.getLevel().getTile(x, y).isPassable()) return false;
 			error -= deltay;
 			if(error < 0) {
 				y += ystep;
