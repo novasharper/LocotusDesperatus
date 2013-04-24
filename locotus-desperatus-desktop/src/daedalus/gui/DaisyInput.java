@@ -188,7 +188,7 @@ public class DaisyInput extends GameContext implements IGamepadEventHandler {
 	}
 	
 	public static void main(String[] args) {
-		GameComponent.create("Daisywheel", 800, 600, true);
+		GameComponent.create("Daisywheel", 800, 600, true, false);
 		GameComponent gc = GameComponent.getGame();
 		gc.pushContext(new DaisyInput());
 		gc.setPaused(false);

@@ -10,10 +10,14 @@ import daedalus.input.IGamepadEventHandler;
 import daedalus.settings.GamepadMapping;
 import daedalus.util.ScreenshotSaver;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
+
+import org.lwjgl.input.Mouse;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -68,7 +72,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	 * @param useGamepad Whether gamepad will be used for input
 	 */
 	
-	private GameComponent(int width, int height, String title, boolean useGamepad) {
+	private GameComponent(int width, int height, String title, boolean useGamepad, boolean fullscreen) {
 		// Save width and height
 		this.width = width;
 		this.height = height;
@@ -82,8 +86,15 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
 		cfg.title = title;
 		cfg.useGL20 = true;
-		cfg.width = width;
-		cfg.height = height;
+		if(!fullscreen) {
+			cfg.width = width;
+			cfg.height = height;
+		} else {
+			GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+			cfg.width = gd.getDisplayMode().getWidth();
+			cfg.height = gd.getDisplayMode().getHeight();
+			cfg.fullscreen = true;
+		}
 		cfg.resizable = false;
 		cfg.vSyncEnabled = true;
 		cfg.samples = 4;
@@ -95,9 +106,9 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		showFPS = !showFPS;
 	}
 	
-	public static void create(String title, int width, int height, boolean useGamepad) {
+	public static void create(String title, int width, int height, boolean useGamepad, boolean fullscreen) {
 		if(game != null) throw new RuntimeException("Cannot create more than one game.");
-		game = new GameComponent(width, height, title, useGamepad);
+		game = new GameComponent(width, height, title, useGamepad, fullscreen);
 	}
 	
 	public static GameComponent getGame() {
@@ -118,6 +129,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		for(GameContext ctxt : gameContextStack) ctxt.init();
 		if(pauseMenu != null) pauseMenu.init();
 		GamepadMapping.load();
+		Mouse.setGrabbed(true);
 	}
 	
 	public void setPaused(boolean paused) {
@@ -339,7 +351,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	}
 	
 	public static void main(String[] args) {
-		GameComponent.create("Test", 800, 600, true);
+		GameComponent.create("Test", 800, 600, true, false);
 		GameComponent.getGame().pushContext(new DaisyInput());
 		GameComponent.getGame().resume();
 	}

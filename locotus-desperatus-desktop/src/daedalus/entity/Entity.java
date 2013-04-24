@@ -7,15 +7,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
 import daedalus.Physics;
+import daedalus.Root;
 import daedalus.combat.Weapon;
 import daedalus.graphics.GraphicsElement;
+import daedalus.ld.LDMain;
 import daedalus.main.GameComponent;
-import daedalus.test.TestMain;
 
 
 public abstract class Entity implements GraphicsElement {
@@ -69,6 +71,12 @@ public abstract class Entity implements GraphicsElement {
 	}
 	
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
+		double drawx = getDrawX();
+		double drawy = getDrawY();
+		String label = "" + name; //getLoc();
+		if(drawx < -40 || drawx > Gdx.graphics.getWidth() + 40) return;
+		if(drawy < -40 || drawy > Gdx.graphics.getHeight() + 40) return;
+		BitmapFont font = Root.getFont(12);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 		sr.setColor(colorSet[colorIndex][0]);
@@ -79,6 +87,14 @@ public abstract class Entity implements GraphicsElement {
 		sr.circle((float) getDrawX(), (float) getDrawY(), 2);
 		sr.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
+		sb.begin();
+		sb.enableBlending();
+		font.setColor(Color.WHITE);
+		font.draw(sb, label, (float) getDrawX() - font.getBounds(label).width / 2,
+				(float) getDrawY() + 20 + font.getBounds(label).height + 10);
+		sb.end();
+//		if(arms.getFirst() != null)
+//			arms.getFirst().render(sb, sr);
 	}
 	
 	public void tick() {
@@ -148,41 +164,5 @@ public abstract class Entity implements GraphicsElement {
 		if(!arms.isEmpty())
 			return arms.getFirst();
 		return null;
-	}
-	
-	public boolean hasLOS(Entity other) {
-		int x0 = (int) location.x,
-				y0 = (int) location.y,
-				x1 = (int) other.location.x,
-				y1 = (int) other.location.y;
-		double angle = Math.atan2(y1 - y0, x1 - x0);
-		if(angle < 0) angle += Math.PI * 2;
-		if(Math.abs(angle - rotation) > Math.PI / 6) return false;
-		boolean steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
-		if(steep) {
-			int t = x0; x0 = y0; y0 = t;
-			t = x1; x1 = y1; y1 = t;
-		}
-		if(x0 > x1) {
-			int t = x0; x0 = x1; x1 = t;
-			t = y0; y0 = y1; y1 = t;
-		}
-		int deltax = x1 - x0;
-		int deltay = Math.abs(y1 - y0);
-		int error = deltax / 2;
-		int ystep;
-		int y = y0;
-		if(y0 < y1) ystep = 1;
-		else ystep = -1;
-		for(int x = x0; x <= x1; x++) {
-			if(steep) { if(!Physics.getLevel().getTile(y, x).isPassable()) return false; }
-			else if(!Physics.getLevel().getTile(x, y).isPassable()) return false;
-			error -= deltay;
-			if(error < 0) {
-				y += ystep;
-				error += deltax;
-			}
-		}
-		return true;
 	}
 }

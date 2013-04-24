@@ -48,7 +48,7 @@ public class TestMainMenu extends Menu {
 	}
 	
 	public static void main(String[] args) {
-		GameComponent.create("GUI Test", 800, 600, true);
+		GameComponent.create("GUI Test", 800, 600, true, false);
 		Menu menu = new TestMenu();
 		GameComponent.getGame().setPauseMenu(menu);
 		GameComponent.getGame().pushContext(new TestMainMenu());

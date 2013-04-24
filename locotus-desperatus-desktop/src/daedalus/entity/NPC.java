@@ -5,13 +5,16 @@ import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
+import com.badlogic.gdx.Gdx;
+
 import daedalus.anim.Animation;
 import daedalus.anim.RotationAnimation;
 import daedalus.anim.TranslationAnimation;
 import daedalus.graphics.SpriteEngine;
+import daedalus.ld.LDMain;
+import daedalus.leveleditor.Main;
 import daedalus.main.GameComponent;
 import daedalus.main.Path;
-import daedalus.test.TestMain;
 
 
 public class NPC extends Entity {
@@ -21,7 +24,7 @@ public class NPC extends Entity {
 	
 	public NPC(String name) {
 		super(name, 100);
-		speed = GameComponent.tileSize * 1; // Per second
+		speed = 1 * GameComponent.tileSize; // Per second
 		animQueue = new LinkedList<Animation>();
 	}
 	
@@ -59,5 +62,13 @@ public class NPC extends Entity {
 			if(an instanceof RotationAnimation || an instanceof TranslationAnimation)
 				it.remove();
 		}
+	}
+	
+	public double getDrawX() {
+		return (getLoc().x - LDMain.getHero().getLoc().x) * GameComponent.tileSize + Gdx.graphics.getWidth() / 2;
+	}
+	
+	public double getDrawY() {
+		return (getLoc().y - LDMain.getHero().getLoc().y) * GameComponent.tileSize + Gdx.graphics.getHeight() / 2;
 	}
 }

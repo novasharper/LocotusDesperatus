@@ -3,9 +3,13 @@ package daedalus.combat;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
+import daedalus.Physics;
 import daedalus.entity.Entity;
 import daedalus.graphics.GraphicsElement;
 import daedalus.graphics.Sprite;
@@ -16,8 +20,6 @@ public abstract class Weapon implements GraphicsElement {
 	protected Entity wielder;
 	protected int power_loaded;
 	protected int power_reserve;
-	protected Sprite owner;
-	protected Sprite sprite;
 	
 	public Weapon(Entity wielder) {
 		this.wielder = wielder;
@@ -26,19 +28,17 @@ public abstract class Weapon implements GraphicsElement {
 	}
 	
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
-		if(sprite == null) sprite = SpriteEngine.getSprite(getSpriteName());
-		if(owner == null) owner = SpriteEngine.getSprite(wielder.getSpriteName());
-		
 		Point2D.Double drawLoc = wielder.getDrawLoc();
-		Point2D.Double drawCenter = (Point2D.Double) drawLoc.clone();
-		
-		drawLoc.x += owner.getWidth() - sprite.getWidth() / 2;
-		drawLoc.y += owner.getHeight() - sprite.getHeight() / 2;
-		
-		drawCenter.x += owner.getCenter().getX();
-		drawCenter.y += owner.getCenter().getY();
-		
-		//sprite.render(drawLoc, drawCenter, wielder.getRot(), gr);
+		double rot = wielder.getRot();
+		sr.begin(ShapeType.Line);
+		sr.setColor(Color.WHITE);
+		double leny = Gdx.graphics.getHeight() / 2, lenx = Gdx.graphics.getWidth() / 2;
+		double leny2 = Math.min(leny, lenx * Math.abs(Math.sin(rot) / Math.cos(rot)));
+		double lenx2 = Math.min(lenx, leny * Math.abs(Math.cos(rot) / Math.sin(rot)));
+		double len = Math.sqrt(lenx2 * lenx2 + leny2 * leny2);
+		sr.line((float) (drawLoc.x + 20 * Math.cos(rot)), (float) (drawLoc.y + 20 * Math.sin(rot)),
+				(float) (drawLoc.x + len * Math.cos(rot)), (float) (drawLoc.y + len * Math.sin(rot)));
+		sr.end();
 	}
 	
 	public abstract String getName();

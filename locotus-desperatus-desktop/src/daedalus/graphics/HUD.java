@@ -19,9 +19,9 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import daedalus.Root;
 import daedalus.combat.Weapon;
 import daedalus.entity.Entity;
+import daedalus.ld.LDMain;
 import daedalus.main.GameComponent;
 import daedalus.main.GameContext;
-import daedalus.test.TestMain;
 
 
 public class HUD extends GameContext {

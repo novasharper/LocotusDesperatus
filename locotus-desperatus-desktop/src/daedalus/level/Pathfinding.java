@@ -20,7 +20,7 @@ public class Pathfinding {
 			public abstract double h_val(Tile start, Tile end);
 		}
 		
-		private static int h_num = H_FUNCS.CROW_H.ordinal();
+		private static int h_num = H_FUNCS.MANHATTAN_H.ordinal();
 		public static double heuristic(Tile start, Tile end) {
 			return H_FUNCS.values()[h_num].h_val(start, end);
 		}
