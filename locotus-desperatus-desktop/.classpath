@@ -11,7 +11,8 @@
 	<classpathentry kind="lib" path="C:/Users/pat/Dropbox/locotus_desperatus/libgdx/extensions/gdx-freetype/gdx-freetype.jar"/>
 	<classpathentry kind="lib" path="C:/Users/pat/Dropbox/locotus_desperatus/libgdx/extensions/gdx-freetype/gdx-freetype-natives.jar"/>
 	<classpathentry kind="lib" path="C:/Users/pat/Dropbox/locotus_desperatus/libgdx/extensions/gdx-tools/gdx-tools.jar"/>
-	<classpathentry kind="lib" path="libs/jinput-natives.jar"/>
-	<classpathentry kind="lib" path="libs/jinput.jar"/>
+	<classpathentry kind="lib" path="C:/Users/pat/Dropbox/locotus_desperatus/libgdx/extensions/gdx-controllers/gdx-controllers.jar"/>
+	<classpathentry kind="lib" path="C:/Users/pat/Dropbox/locotus_desperatus/libgdx/extensions/gdx-controllers/gdx-controllers-desktop.jar"/>
+	<classpathentry kind="lib" path="C:/Users/pat/Dropbox/locotus_desperatus/libgdx/extensions/gdx-controllers/gdx-controllers-desktop-natives.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -6,10 +6,13 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.controllers.Controller;
+import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.utils.Array;
 
 import daedalus.*;
 import daedalus.anim.TranslationAnimation;
@@ -30,8 +33,8 @@ import daedalus.settings.Options;
 public class LDMain extends GameContext {
 	private Gamepad gamepad;
 	private Level map;
-	private static Hero chief;
-	private static NPC other;
+	public static Hero chief;
+	public static NPC other;
 	public static LDMain ldm;
 	private int xRadius, yRadius;
 	
@@ -54,7 +57,6 @@ public class LDMain extends GameContext {
 		}
 		ldm = this;
 	}
-
 	@Override
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
 		sr.begin(ShapeType.Filled);
@@ -111,7 +113,7 @@ public class LDMain extends GameContext {
 	}
 	
 	public static void main(String[] args) {
-		GameComponent.create("Locotus Desperatus", 1280, 704, true, true);
+		GameComponent.create("Locotus Desperatus", 1280, 704, true, false);
 		GameComponent.getGame().pushContext(new LDMain());
 		GameComponent.getGame().pushContext(new HUD(chief));
 		GameComponent.getGame().start();

@@ -18,4 +18,10 @@ public class Hero extends Character {
 	public double getDrawY() {
 		return Gdx.graphics.getHeight() / 2;
 	}
+	
+	public void tick() {
+		super.tick();
+		if(hasLOS(LDMain.other)) colorIndex = 0;
+		else colorIndex = 1;
+	}
 }

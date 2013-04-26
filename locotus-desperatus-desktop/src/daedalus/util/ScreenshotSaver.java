@@ -12,6 +12,8 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.imageio.ImageIO;
 
@@ -28,7 +30,18 @@ public class ScreenshotSaver {
 		File createTempFile = File.createTempFile(baseName, ".png");
 		saveScreenshot(createTempFile);
 	}
-
+	
+	public static void saveScreenshot() throws IOException {
+		Date currentDate = new Date();
+		SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+		File baseDir = new File(Util.getWorkingDir(), "screenshots");
+		try {
+			baseDir.mkdirs();
+		} catch(Exception ex) {}
+		File photo = new File(baseDir, f.format(currentDate) + ".png");
+		saveScreenshot(photo, false);
+	}
+	
 	public static void saveScreenshot(File file) throws IOException {
 		saveScreenshot(file, false);
 	}

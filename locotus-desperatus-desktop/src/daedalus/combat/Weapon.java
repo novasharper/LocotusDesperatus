@@ -14,17 +14,61 @@ import daedalus.entity.Entity;
 import daedalus.graphics.GraphicsElement;
 import daedalus.graphics.Sprite;
 import daedalus.graphics.SpriteEngine;
+import daedalus.level.Level;
+import daedalus.level.Tile;
+import daedalus.main.GameComponent;
 
 
 public abstract class Weapon implements GraphicsElement {
 	protected Entity wielder;
 	protected int power_loaded;
 	protected int power_reserve;
+	protected int range;
 	
 	public Weapon(Entity wielder) {
 		this.wielder = wielder;
 		power_loaded = getMaxLoad();
 		power_reserve = getMaxReserve();
+		range = 10;
+	}
+	
+	public double fireLen() {
+		int res = GameComponent.tileSize;
+		
+		double rot = wielder.getRot();
+		double leny2 = range * res * Math.abs(Math.sin(rot));
+		double lenx2 = range * res * Math.abs(Math.cos(rot));
+		
+		int x0 = (int) (wielder.getLoc().x * res);
+		int x1 = (int) Math.floor(x0 + lenx2 * Math.signum(Math.cos(rot)));
+		int y0 = (int) (wielder.getLoc().y * res);
+		int y1 = (int) Math.floor(y0 + leny2 * Math.signum(Math.sin(rot)));
+		int dx =  Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	    int dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	    int err = dx + dy, e2;
+	    int x = x0;
+	    int y = y0;
+	    
+		Level lvl = Physics.getLevel();
+		
+	    for (;;) {
+	    	Tile tile = lvl.getTile((int) Math.floor(x0 * 1.0 / res), (int) Math.floor(y0 * 1.0 / res));
+	    	if(tile == null || !tile.isPassable()) break;
+
+	        if (x0 == x1 && y0 == y1) break;
+
+	        e2 = 2 * err;
+
+	        // EITHER horizontal OR vertical step (but not both!)
+	        if (e2 > dy) { 
+	            err += dy;
+	            x0 += sx;
+	        } else if (e2 < dx) { // <--- this "else" makes the difference
+	            err += dx;
+	            y0 += sy;
+	        }
+	    }
+	    return Math.sqrt(Math.pow(x0 - x, 2) + Math.pow(y0 - y, 2));
 	}
 	
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
@@ -36,6 +80,7 @@ public abstract class Weapon implements GraphicsElement {
 		double leny2 = Math.min(leny, lenx * Math.abs(Math.sin(rot) / Math.cos(rot)));
 		double lenx2 = Math.min(lenx, leny * Math.abs(Math.cos(rot) / Math.sin(rot)));
 		double len = Math.sqrt(lenx2 * lenx2 + leny2 * leny2);
+		len = Math.min(Math.max(20, fireLen()), 3 * GameComponent.tileSize);
 		sr.line((float) (drawLoc.x + 20 * Math.cos(rot)), (float) (drawLoc.y + 20 * Math.sin(rot)),
 				(float) (drawLoc.x + len * Math.cos(rot)), (float) (drawLoc.y + len * Math.sin(rot)));
 		sr.end();

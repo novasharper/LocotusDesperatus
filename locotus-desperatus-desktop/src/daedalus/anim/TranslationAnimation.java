@@ -29,6 +29,7 @@ public class TranslationAnimation extends Animation {
 	}
 	
 	public void tick() {
+		super.tick();
 		if(!isFinished()) {
 			this.target.setX((end.x - start.x) * timeAlong() / length + start.x);
 			this.target.setY((end.y - start.y) * timeAlong() / length + start.y);
@@ -48,8 +49,8 @@ public class TranslationAnimation extends Animation {
 	}
 	
 	public Animation invert() {
-			TranslationAnimation newAnim = new TranslationAnimation(target, length, (Point2D.Double) start.clone());
-			newAnim.start = (Point2D.Double) end.clone();
-			return newAnim;
+		TranslationAnimation newAnim = new TranslationAnimation(target, length, (Point2D.Double) start.clone());
+		newAnim.start = (Point2D.Double) end.clone();
+		return newAnim;
 	}
 }

@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Rectangle;
 import daedalus.Physics;
 import daedalus.combat.Weapon;
 import daedalus.graphics.SpriteEngine;
+import daedalus.input.F310;
 import daedalus.level.Tile;
 import daedalus.main.GameComponent;
 
@@ -22,10 +23,10 @@ public class Character extends Entity {
 	}
 	
 	public void tick() {
-		double dxl = GameComponent.getGamePad().getXLeft();
-		double dyl = GameComponent.getGamePad().getYLeft();
-		double dxr = GameComponent.getGamePad().getXRight();
-		double dyr = GameComponent.getGamePad().getYRight();
+		double dxl = GameComponent.getGamePad().pollAxis(F310.AXIS_LEFT_X);
+		double dyl = GameComponent.getGamePad().pollAxis(F310.AXIS_LEFT_Y);
+		double dxr = GameComponent.getGamePad().pollAxis(F310.AXIS_RIGHT_X);
+		double dyr = GameComponent.getGamePad().pollAxis(F310.AXIS_RIGHT_Y);
 		// Allow strafing
 		if(dxr * dxr + dyr * dyr >= GameComponent.getGamePad().rot_deadzone)
 			rotation = 2 * Math.PI - Math.atan2(dyr, dxr);

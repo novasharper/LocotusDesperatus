@@ -17,6 +17,7 @@ import daedalus.Root;
 import daedalus.combat.Weapon;
 import daedalus.graphics.GraphicsElement;
 import daedalus.ld.LDMain;
+import daedalus.level.Level;
 import daedalus.main.GameComponent;
 
 
@@ -93,8 +94,8 @@ public abstract class Entity implements GraphicsElement {
 		font.draw(sb, label, (float) getDrawX() - font.getBounds(label).width / 2,
 				(float) getDrawY() + 20 + font.getBounds(label).height + 10);
 		sb.end();
-//		if(arms.getFirst() != null)
-//			arms.getFirst().render(sb, sr);
+		if(!arms.isEmpty() && arms.getFirst() != null)
+			arms.getFirst().render(sb, sr);
 	}
 	
 	public void tick() {
@@ -164,5 +165,38 @@ public abstract class Entity implements GraphicsElement {
 		if(!arms.isEmpty())
 			return arms.getFirst();
 		return null;
+	}
+	
+	public boolean hasLOS(Entity other) {
+		int res = 25;
+		int x0 = (int) (location.x * res);
+		int x1 = (int) (other.location.x * res);
+		int y0 = (int) (location.y * res);
+		int y1 = (int) (other.location.y * res);
+	    double rot = Math.atan2(y1 - y0, x1 - x0);
+	    if(Math.abs((rotation + Math.PI - rot) % (Math.PI * 2) - Math.PI) > Math.PI / 4) return false;
+		int dx =  Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	    int dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	    int err = dx + dy, e2;
+	    
+		Level lvl = Physics.getLevel();
+
+	    for (;;) {
+	    	if(!lvl.getTile(x0 / res, y0 / res).isPassable()) return false;
+
+	        if (x0 == x1 && y0 == y1) break;
+
+	        e2 = 2 * err;
+
+	        // EITHER horizontal OR vertical step (but not both!)
+	        if (e2 > dy) { 
+	            err += dy;
+	            x0 += sx;
+	        } else if (e2 < dx) { // <--- this "else" makes the difference
+	            err += dx;
+	            y0 += sy;
+	        }
+	    }
+	    return true;
 	}
 }

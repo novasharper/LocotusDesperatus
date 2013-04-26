@@ -7,6 +7,7 @@ import daedalus.input.GamepadEvent;
 import daedalus.input.GamepadEvent.ComponentType;
 import daedalus.input.GamepadEvent.EventType;
 import daedalus.input.IGamepadEventHandler;
+import daedalus.input.F310;
 import daedalus.settings.GamepadMapping;
 import daedalus.util.ScreenshotSaver;
 
@@ -121,7 +122,9 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		return game.gamepad;
 	}
 	
+	private boolean initDone = false;
 	public void init() {
+		if(initDone) return;
 		if(useGamepad) {
 			gamepad = new Gamepad();
 			gamepad.addEventHandler(this);
@@ -129,11 +132,12 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		for(GameContext ctxt : gameContextStack) ctxt.init();
 		if(pauseMenu != null) pauseMenu.init();
 		GamepadMapping.load();
-		Mouse.setGrabbed(true);
+//		Mouse.setGrabbed(true);
+		initDone = true;
 	}
 	
 	public void setPaused(boolean paused) {
-		this.paused = paused && pauseMenu != null;
+		this.paused = paused;
 	}
 	
 	public void setPauseMenu(Menu pauseMenu) {
@@ -211,55 +215,55 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	 * Main loop
 	 */
 	public void run() {
-		running = true;
-		
-		long lastTime = System.nanoTime();
-		// Number of unprocessed events
-		double unprocessed = 0;
-		
-		try {
-			init();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return;
-		}
-		
-		int toTick = 0;
-		
-		while(running) {
-			double nsPerTick = 1000000000.0 / framerate;
-			
-			while (unprocessed >= 1) {
-				toTick++;
-				unprocessed -= 1;
-			}
-			
-			int tickCount = toTick;
-			if (toTick > 0 && toTick < 3) {
-				tickCount = 1;
-			}
-			if (toTick > 20) {
-				toTick = 20;
-			}
-			
-			for (int i = 0; i < tickCount; i++) {
-				toTick--;
-				tick();
-			}
-			long now = System.nanoTime();
-			unprocessed += (now - lastTime) / nsPerTick;
-			lastTime = now;
-			
-			try {
-				Thread.sleep(1);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		GamepadMapping.save();
-		
-		Gdx.app.exit();
+//		running = true;
+//		
+//		long lastTime = System.nanoTime();
+//		// Number of unprocessed events
+//		double unprocessed = 0;
+//		
+//		try {
+//			init();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//			return;
+//		}
+//		
+//		int toTick = 0;
+//		
+//		while(running) {
+//			double nsPerTick = 1000000000.0 / framerate;
+//			
+//			while (unprocessed >= 1) {
+//				toTick++;
+//				unprocessed -= 1;
+//			}
+//			
+//			int tickCount = toTick;
+//			if (toTick > 0 && toTick < 3) {
+//				tickCount = 1;
+//			}
+//			if (toTick > 20) {
+//				toTick = 20;
+//			}
+//			
+//			for (int i = 0; i < tickCount; i++) {
+//				toTick--;
+//				tick();
+//			}
+//			long now = System.nanoTime();
+//			unprocessed += (now - lastTime) / nsPerTick;
+//			lastTime = now;
+//			
+//			try {
+//				Thread.sleep(1);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		
+//		GamepadMapping.save();
+//		
+//		Gdx.app.exit();
 	}
 	
 	public void start() {
@@ -272,13 +276,16 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	}
 	
 	public void stop() {
-		running = false;
+		GamepadMapping.save();
+		Gdx.app.exit();
+//		running = false;
 	}
 	
 	public void handleInput(GamepadEvent ev) {
-		if(ev.getType() == EventType.RELEASED && ev.getCType() == ComponentType.BUTTON
-				&& ev.getButtonID() == GamepadMapping.instance().BACK)
-			stop();
+		if(ev.getType() == EventType.RELEASED && ev.getCType() == ComponentType.BUTTON) {
+			if(ev.getButtonID() == F310.BUTTON_BACK) stop();
+			else if(ev.getButtonID() == F310.BUTTON_START) setPaused(!paused);
+		}
 	}
 	public void create() {
 		Gdx.input.setInputProcessor(inputStack);
@@ -286,7 +293,8 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		fpsFont = Root.getFont(36, "data/fps_counter.ttf");
 		sr = new ShapeRenderer();
 		sb = new SpriteBatch();
-		start();
+		init();
+//		start();
 	}
 	public void resize(int width, int height) {
 		camera = new OrthographicCamera(1, (float) height / width);
@@ -298,7 +306,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	public boolean keyUp(int keyid) {
 		if(keyid == exitKey) exitKeyPressed = true;
 		else if(keyid == Keys.F2) try {
-			ScreenshotSaver.saveScreenshot(new File("scrn.png"));
+			ScreenshotSaver.saveScreenshot();
 		} catch(IOException ex) {}
 		else if(keyid == Keys.F11) {
 			if(Gdx.graphics.isFullscreen()) {
@@ -307,17 +315,18 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 				DisplayMode dm = Gdx.graphics.getDesktopDisplayMode();
 				Gdx.graphics.setDisplayMode(dm.width, dm.height, true);
 			}
+			gamepad.reload();
 		} else if(keyid == Keys.F7) {
 			toggleFPSCounter();
 		}
 		return true;
 	}
 	public void render() {
+		tick();
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL11.GL_COLOR_BUFFER_BIT);
-		if(paused) {
-			if(pauseMenu != null) pauseMenu.render(sb, sr);
-		} else {
+		if(paused && pauseMenu != null) pauseMenu.render(sb, sr);
+		else {
 			if(gameContextStack.isEmpty()) return;
 			// Iterate backwards to get index of first context that is shown
 			int first;

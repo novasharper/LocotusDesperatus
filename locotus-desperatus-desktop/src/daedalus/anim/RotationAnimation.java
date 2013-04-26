@@ -19,6 +19,7 @@ public class RotationAnimation extends Animation {
 	}
 	
 	public void tick() {
+		super.tick();
 		if(!isFinished()) {
 			this.target.setRot((end - start) * timeAlong() / length + start);
 		} else {

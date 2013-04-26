@@ -32,7 +32,7 @@ public class Sprite {
 	private Point2D center;
 
 	public Sprite(String path) {
-		this(new File(Root.class.getResource(path).getFile()));
+		this(Root.class.getResourceAsStream(path));
 	}
 	
 	public Sprite(File imgFile) {

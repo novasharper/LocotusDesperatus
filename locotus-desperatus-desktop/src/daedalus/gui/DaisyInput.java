@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import daedalus.Root;
 import daedalus.input.Gamepad;
 import daedalus.input.GamepadEvent;
+import daedalus.input.F310;
 import daedalus.input.GamepadEvent.ComponentType;
 import daedalus.input.GamepadEvent.EventType;
 import daedalus.input.IGamepadEventHandler;
@@ -80,7 +81,7 @@ public class DaisyInput extends GameContext implements IGamepadEventHandler {
 	public void tick() {
 		Gamepad gamepad = GameComponent.getGamePad();
 		selected = gamepad.getDPad();
-		if(gamepad.pollButton(GamepadMapping.instance().BACKSPACE)) {
+		if(gamepad.pollButton(F310.BUTTON_R)) {
 			if(text.length() > 0 && bsTick == 0)
 				text = text.substring(0, text.length() - 1);
 			bsTick = (bsTick + 1) % 12;
@@ -102,7 +103,7 @@ public class DaisyInput extends GameContext implements IGamepadEventHandler {
 			if(buttonID < 4) {
 				if(selected >= 0) {
 					String concat = (chars.charAt(selected * 4 + buttonMap.get(buttonID)) + "");
-					if(Math.abs(gamepad.pollTrigger()) < 0.5f) concat = concat.toLowerCase();
+					if(Math.abs(gamepad.pollAxis(F310.AXIS_TRIGGER)) < 0.5f) concat = concat.toLowerCase();
 					text += concat;
 				}
 			} else if(buttonID == GamepadMapping.instance().SPACE) {

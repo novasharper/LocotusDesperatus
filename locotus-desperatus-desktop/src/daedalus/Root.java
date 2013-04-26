@@ -47,7 +47,7 @@ public class Root {
 	
 	public static Texture loadTexture(InputStream is) {
 		try {
-			Gdx2DPixmap gPixmap = new Gdx2DPixmap(is, Gdx2DPixmap.GDX2D_FORMAT_RGB888);
+			Gdx2DPixmap gPixmap = new Gdx2DPixmap(is, Gdx2DPixmap.GDX2D_FORMAT_RGBA8888);
 			Pixmap pixmap = new Pixmap(gPixmap);
 			return new Texture(pixmap);
 		} catch (Exception e) {
