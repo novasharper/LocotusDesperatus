@@ -33,10 +33,12 @@ public class LDMain extends GameContext {
 	
 	public LDMain() {
 		entities = new ArrayList<Entity>();
-		AIEntity other = new AIEntity("Chief");
-		other.setX(0.5);
-		other.setY(0.5);
-		entities.add(other);
+		for(int i = 0; i < 9; i++) {
+			AIEntity other = new AIEntity("Chief");
+			other.setX(0.5 + i % 3);
+			other.setY(0.5 + i / 3);
+			entities.add(other);
+		}
 		chief = new Hero();
 		chief.setX(0.5);
 		chief.setY(0.5);
@@ -81,12 +83,20 @@ public class LDMain extends GameContext {
 	public void init() {
 		xRadius = (int) (GameComponent.getGame().width / GameComponent.tileSize) / 2 + 1;
 		yRadius = (int) (GameComponent.getGame().height / GameComponent.tileSize) / 2 + 1;
-		map = new Level(7, 7);
+		map = new Level(30, 20);
 		for(int r = 0; r < map.getHeight(); r++) {
 			for(int c = 0; c < map.getWidth(); c++) {
 				map.getTile(c, r).setPassable(Math.random() < .8 ||
-						((r - chief.getLoc().y) * (r - chief.getLoc().y) + (c - chief.getLoc().x) * (c - chief.getLoc().x) <= 1.5 * 1.5) ||
+						((r - chief.getLoc().y) * (r - chief.getLoc().y) + (c - chief.getLoc().x) * (c - chief.getLoc().x) <= 2.5 * 2.5) ||
 						((r - map.getHeight() + 2) * (r - map.getHeight() + 2) + (c - map.getWidth() + 2) * (c - map.getWidth() + 2) <= 1.5 * 1.5));
+			}
+		}
+		for(Entity e : entities) {
+			if(e instanceof AIEntity) {
+				int xf = (int) (Math.random() * 30);
+				int yf = (int) (Math.random() * 20);
+				Point[] path = Pathfinding.ASTAR(map, map.getTile((int) e.getLoc().x, (int) e.getLoc().y), map.getTile(xf, yf));
+				((AIEntity) e).setPath(new Path(path, true, true));
 			}
 		}
 		Physics.setLevel(map);

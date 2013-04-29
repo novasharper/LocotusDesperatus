@@ -12,7 +12,6 @@ public class AssaultRifle extends Weapon {
 
 	public AssaultRifle(Entity wielder) {
 		super(wielder);
-//		range = 2;
 	}
 	
 	public String getName() {

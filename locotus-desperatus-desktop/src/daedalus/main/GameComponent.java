@@ -55,7 +55,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	private Gamepad gamepad;
 	private boolean useGamepad;
 	private BitmapFont fpsFont;
-	private static boolean showFPS = true;
+	private static boolean showFPS = false;
 	private Menu pauseMenu;
 	private boolean exitKeyPressed = false;
 	private final int exitKey = Keys.ESCAPE;

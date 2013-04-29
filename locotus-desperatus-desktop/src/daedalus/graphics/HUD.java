@@ -1,11 +1,6 @@
 package daedalus.graphics;
 
-import java.awt.BasicStroke;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Paint;
 import java.awt.Point;
-import java.awt.Stroke;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -19,8 +14,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import daedalus.Root;
 import daedalus.combat.Weapon;
 import daedalus.entity.Entity;
-import daedalus.ld.LDMain;
-import daedalus.main.GameComponent;
 import daedalus.main.GameContext;
 
 
@@ -46,11 +39,7 @@ public class HUD extends GameContext {
 	public void init() {
 	}
 	
-	float r = 1;
-	
 	public void tick() {
-		// Deal random damage
-		if(Math.random() <= .02) this.target.damage(20f);
 	}
 	
 	public boolean isTransparent() {
@@ -60,7 +49,6 @@ public class HUD extends GameContext {
 	@Override
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
 		if(hudColor == null || displayColor == null) return;
-		Graphics2D gr = null;
 		Weapon hudWeapon = target.getHudWeapon();
 		float health = target.getHealth();
 		

@@ -68,7 +68,7 @@ public abstract class Entity implements GraphicsElement {
 	
 	private void tri(ShapeRenderer sr, float size, ShapeType type) {
 		Point2D.Double loc = getDrawLoc();
-		double rot = getRotAimAssist();
+		double rot = getRot();
 		sr.begin(type);
 		sr.triangle(
 				(float) loc.x + size * (float) Math.cos(rot),
@@ -189,13 +189,6 @@ public abstract class Entity implements GraphicsElement {
 		return this.rotation;
 	}
 	
-	public double getRotAimAssist() {
-		if(arms != null && !arms.isEmpty()) {
-			return arms.get(0).getRotAimAssist();
-		}
-		return this.rotation;
-	}
-	
 	public void setRot(double rot) {
 		this.rotation = rot;
 		while(this.rotation < 0) this.rotation += Math.PI * 2;
@@ -230,18 +223,19 @@ public abstract class Entity implements GraphicsElement {
 	}
 	
 	public boolean hasLOS(Entity other) {
-		return hasLOS(other, Math.PI / 4, false);
+		return hasLOS(other, Math.PI / 4, getRot());
 	}
 	
-	public boolean hasLOS(Entity other, double halfFovX, boolean aimAssist) {
+	public boolean hasLOS(Entity other, double halfFovX, double overrideAngle) {
 		int res = 25;
 		int x0 = (int) (location.x * res);
 		int x1 = (int) (other.location.x * res);
 		int y0 = (int) (location.y * res);
 		int y1 = (int) (other.location.y * res);
 	    double rot = Math.atan2(y1 - y0, x1 - x0);
-	    double rot_ = aimAssist ? getRotAimAssist() : rotation;
-	    if(Math.abs((rot_ + Math.PI - rot) % (Math.PI * 2) - Math.PI) > halfFovX) return false;
+	    double angle = getRot();
+	    if(overrideAngle > 0) angle = overrideAngle;
+	    if(Math.abs((angle + Math.PI - rot) % (Math.PI * 2) - Math.PI) > halfFovX) return false;
 		int dx =  Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	    int dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
 	    if(Math.abs(dy) >= Gdx.graphics.getHeight() / 2) return false;

@@ -1,9 +1,7 @@
 package daedalus.combat;
 
-import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -12,8 +10,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import daedalus.Physics;
 import daedalus.entity.Entity;
 import daedalus.graphics.GraphicsElement;
-import daedalus.graphics.Sprite;
-import daedalus.graphics.SpriteEngine;
 import daedalus.input.F310;
 import daedalus.input.GamepadEvent;
 import daedalus.input.GamepadEvent.ComponentType;
@@ -30,8 +26,8 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	protected int power_loaded;
 	protected int power_reserve;
 	protected int range;
-	public static boolean aimAssist = true;
-	private double assistRange = Math.PI / 24;
+	protected boolean aimAssist = true;
+	protected double assistRange = Math.PI / 4;
 	
 	public Weapon(Entity wielder) {
 		this.wielder = wielder;
@@ -41,16 +37,15 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 		if(!wielder.isAI()) GameComponent.getGamePad().addEventHandler(this);
 	}
 	
-	public double getRotAimAssist() {
+	public double getRotAimbot() {
 		if(!aimAssist) return wielder.getRot();
 		for(Entity entity : LDMain.ldm.entities) {
 			if(entity == wielder) continue;
-			else if(wielder.hasLOS(entity, assistRange, false) && wielder.getLoc().distance(entity.getLoc()) <= range) {
+			else if(wielder.hasLOS(entity, assistRange, -1) && wielder.getLoc().distance(entity.getLoc()) <= range) {
 				double angle = Math.PI + Math.atan2(wielder.getDrawY() - entity.getDrawY(), wielder.getDrawX() - entity.getDrawX());
-				double fudge = (wielder.getRot() - angle);
-				if(Math.abs(fudge) > assistRange) return wielder.getRot();
-				fudge *= (1 - Math.pow(Math.cos(Math.abs(fudge / assistRange * Math.PI)), 7)) / 2;
-				return angle + fudge;
+				double delta = Math.abs((wielder.getRot() + Math.PI - angle) % (Math.PI * 2) - Math.PI);
+				if(Math.abs(delta) > assistRange) return wielder.getRot();
+				return angle;
 			}
 		}
 		return wielder.getRot();
@@ -62,7 +57,7 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 		double cd = 0;
 		for(Entity entity : LDMain.ldm.entities) {
 			double nd = wielder.getLoc().distance(entity.getLoc());
-			if(wielder.hasLOS(entity, assistRange * 3 / 2, false) && wielder.getLoc().distance(entity.getLoc()) <= range) {
+			if(wielder.hasLOS(entity, Math.PI / 48, getRotAimbot()) && wielder.getLoc().distance(entity.getLoc()) <= range) {
 				if((target == null || nd < cd) && nd * GameComponent.tileSize > 10) {
 					target = entity;
 					cd = nd;
@@ -94,7 +89,7 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	private double fireLen() {
 		int res = GameComponent.tileSize;
 		
-		double rot = getRotAimAssist();
+		double rot = getRotAimbot();
 		double leny2 = range * res * Math.abs(Math.sin(rot));
 		double lenx2 = range * res * Math.abs(Math.cos(rot));
 		
@@ -131,9 +126,9 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	}
 	
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
-		if(!shouldDrawFire()) return;
+		if(!shouldDrawFire() || getLoad() == 0) return;
 		Point2D.Double drawLoc = wielder.getDrawLoc();
-		double rot = getRotAimAssist();
+		double rot = getRotAimbot();
 		sr.begin(ShapeType.Line);
 		sr.setColor(Color.WHITE);
 		double len = Math.max(20, fireLen());
@@ -191,8 +186,9 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	
 	public void reload() {
 		int delta = getMaxLoad() - power_loaded;
-		power_loaded += Math.min(power_reserve, delta);
+		power_loaded += Math.max(Math.min(power_reserve, delta), 0);
 		power_reserve -= delta;
+		power_reserve = Math.max(power_reserve, 0);
 	}
 	
 	public void changeWielder(Entity wielder) {
