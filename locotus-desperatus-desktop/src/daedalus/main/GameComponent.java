@@ -100,6 +100,11 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		cfg.vSyncEnabled = true;
 		cfg.samples = 4;
 		
+		if(useGamepad) {
+			gamepad = new Gamepad();
+			gamepad.addEventHandler(this);
+		}
+		
 		new LwjglApplication(this, cfg);
 	}
 	
@@ -125,14 +130,10 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	private boolean initDone = false;
 	public void init() {
 		if(initDone) return;
-		if(useGamepad) {
-			gamepad = new Gamepad();
-			gamepad.addEventHandler(this);
-		}
 		for(GameContext ctxt : gameContextStack) ctxt.init();
 		if(pauseMenu != null) pauseMenu.init();
 		GamepadMapping.load();
-//		Mouse.setGrabbed(true);
+		Mouse.setGrabbed(true);
 		initDone = true;
 	}
 	

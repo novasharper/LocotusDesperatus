@@ -16,8 +16,11 @@ import daedalus.Physics;
 import daedalus.Root;
 import daedalus.combat.Weapon;
 import daedalus.graphics.GraphicsElement;
+import daedalus.input.F310;
+import daedalus.input.Gamepad;
 import daedalus.ld.LDMain;
 import daedalus.level.Level;
+import daedalus.level.Tile;
 import daedalus.main.GameComponent;
 
 
@@ -28,6 +31,8 @@ public abstract class Entity implements GraphicsElement {
 	protected float health;
 	protected float maxHealth;
 	protected long lastDamage;
+	protected boolean isAI;
+	protected double speed;
 	protected LinkedList<Weapon> arms;
 	protected int colorIndex = 5;
 	
@@ -40,13 +45,15 @@ public abstract class Entity implements GraphicsElement {
 		{ new Color(0.75f, 0f, 0.75f, 0.9f), new Color(1, 0, 1, 1) }
 	};
 	
-	public Entity(String name, float maxHealth) {
+	public Entity(String name, float maxHealth, double speed, boolean isAI) {
 		this.name = name;
 		this.location = new Point2D.Double();
 		this.rotation = 0;
 		this.maxHealth = maxHealth;
 		this.health = maxHealth;
 		this.arms = new LinkedList<Weapon>();
+		this.speed = speed;
+		this.isAI = isAI;
 	}
 	
 	public void equip(Weapon weapon) {
@@ -61,23 +68,25 @@ public abstract class Entity implements GraphicsElement {
 	
 	private void tri(ShapeRenderer sr, float size, ShapeType type) {
 		Point2D.Double loc = getDrawLoc();
+		double rot = getRotAimAssist();
 		sr.begin(type);
-		sr.triangle((float) loc.x + size * (float) Math.cos(getRot()), (float) loc.y + size * (float) Math.sin(getRot()),
-				(float) loc.x + size * (float) Math.cos(getRot() - 5 * Math.PI / 4),
-				(float) loc.y + size * (float) Math.sin(getRot() - 5 * Math.PI / 4),
+		sr.triangle(
+				(float) loc.x + size * (float) Math.cos(rot),
+				(float) loc.y + size * (float) Math.sin(rot),
 				
-				(float) loc.x + size * (float) Math.cos(getRot() + 5 * Math.PI / 4),
-				(float) loc.y + size * (float) Math.sin(getRot() + 5 * Math.PI / 4));
+				(float) loc.x + size * (float) Math.cos(rot - 5 * Math.PI / 4),
+				(float) loc.y + size * (float) Math.sin(rot - 5 * Math.PI / 4),
+				
+				(float) loc.x + size * (float) Math.cos(rot + 5 * Math.PI / 4),
+				(float) loc.y + size * (float) Math.sin(rot + 5 * Math.PI / 4));
 		sr.end();
 	}
 	
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
 		double drawx = getDrawX();
 		double drawy = getDrawY();
-		String label = "" + name; //getLoc();
 		if(drawx < -40 || drawx > Gdx.graphics.getWidth() + 40) return;
 		if(drawy < -40 || drawy > Gdx.graphics.getHeight() + 40) return;
-		BitmapFont font = Root.getFont(12);
 		Gdx.gl.glEnable(GL20.GL_BLEND);
 		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 		sr.setColor(colorSet[colorIndex][0]);
@@ -88,18 +97,64 @@ public abstract class Entity implements GraphicsElement {
 		sr.circle((float) getDrawX(), (float) getDrawY(), 2);
 		sr.end();
 		Gdx.gl.glDisable(GL20.GL_BLEND);
-		sb.begin();
-		sb.enableBlending();
-		font.setColor(Color.WHITE);
-		font.draw(sb, label, (float) getDrawX() - font.getBounds(label).width / 2,
-				(float) getDrawY() + 20 + font.getBounds(label).height + 10);
-		sb.end();
 		if(!arms.isEmpty() && arms.getFirst() != null)
 			arms.getFirst().render(sb, sr);
+		if(isAI) {
+			float barWidth = 60;
+			BitmapFont font = Root.getFont(12);
+			String label = "" + name;
+			sb.begin();
+			sb.enableBlending();
+			font.setColor(Color.WHITE);
+			font.draw(sb, label, (float) getDrawX() - font.getBounds(label).width / 2,
+					(float) getDrawY() + 40 + font.getBounds(label).height);
+			sb.end();
+			sr.begin(ShapeType.Filled);
+			float red = Math.min(1f, 2f * (1f - health / maxHealth));
+			float green = Math.min(1f, 2f * (health / maxHealth));
+			sr.setColor(red, green, 0, 1f);
+			sr.rect((float) getDrawX() - barWidth / 2, (float) getDrawY() + 30, (float) (barWidth * health / maxHealth), 5);
+			sr.end();
+		}
+	}
+	
+	private void humanTick() {
+		if(System.currentTimeMillis() - lastDamage > 750) heal(1f);
+		double dxl = GameComponent.getGamePad().pollAxis(F310.AXIS_LEFT_X);
+		double dyl = GameComponent.getGamePad().pollAxis(F310.AXIS_LEFT_Y);
+		double dxr = GameComponent.getGamePad().pollAxis(F310.AXIS_RIGHT_X);
+		double dyr = GameComponent.getGamePad().pollAxis(F310.AXIS_RIGHT_Y);
+		// Allow strafing
+		if(dxr * dxr + dyr * dyr >= Gamepad.rot_deadzone)
+			rotation = 2 * Math.PI - Math.atan2(dyr, dxr);
+		else if(dxl * dxl + dyl * dyl >= Gamepad.rot_deadzone)
+			rotation = 2 * Math.PI - Math.atan2(dyl, dxl);
+		if(Math.abs(dxl) < 0.1) dxl = 0;
+		if(Math.abs(dyl) < 0.1) dyl = 0;
+		double deltay = dyl * speed / GameComponent.framerate;
+		double deltax = dxl * speed / GameComponent.framerate;
+		Tile t1 = Physics.getLevel().getTile((int) location.x, (int) Math.floor(location.y - deltay));
+		Tile t2 = Physics.getLevel().getTile((int) Math.floor(location.x + deltax), (int) location.y);
+		if(t1 == null || !t1.isPassable())
+			deltay = 0;
+		if(t2 == null || !t2.isPassable())
+			deltax = 0;
+		location.y -= deltay;
+		location.x += deltax;
+		if(!arms.isEmpty()) {
+			arms.get(0).tick();
+		}
+	}
+	
+	protected void aiTick() {
 	}
 	
 	public void tick() {
-		if(System.currentTimeMillis() - lastDamage > 750) heal(1f);
+		if(isAI) {
+			aiTick();
+		} else {
+			humanTick();
+		}
 	}
 	
 	public double getDrawX() {
@@ -131,6 +186,13 @@ public abstract class Entity implements GraphicsElement {
 	}
 	
 	public double getRot() {
+		return this.rotation;
+	}
+	
+	public double getRotAimAssist() {
+		if(arms != null && !arms.isEmpty()) {
+			return arms.get(0).getRotAimAssist();
+		}
 		return this.rotation;
 	}
 	
@@ -168,15 +230,22 @@ public abstract class Entity implements GraphicsElement {
 	}
 	
 	public boolean hasLOS(Entity other) {
+		return hasLOS(other, Math.PI / 4, false);
+	}
+	
+	public boolean hasLOS(Entity other, double halfFovX, boolean aimAssist) {
 		int res = 25;
 		int x0 = (int) (location.x * res);
 		int x1 = (int) (other.location.x * res);
 		int y0 = (int) (location.y * res);
 		int y1 = (int) (other.location.y * res);
 	    double rot = Math.atan2(y1 - y0, x1 - x0);
-	    if(Math.abs((rotation + Math.PI - rot) % (Math.PI * 2) - Math.PI) > Math.PI / 4) return false;
+	    double rot_ = aimAssist ? getRotAimAssist() : rotation;
+	    if(Math.abs((rot_ + Math.PI - rot) % (Math.PI * 2) - Math.PI) > halfFovX) return false;
 		int dx =  Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	    int dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	    if(Math.abs(dy) >= Gdx.graphics.getHeight() / 2) return false;
+	    if(dx >= Gdx.graphics.getWidth() / 2) return false;
 	    int err = dx + dy, e2;
 	    
 		Level lvl = Physics.getLevel();
@@ -198,5 +267,13 @@ public abstract class Entity implements GraphicsElement {
 	        }
 	    }
 	    return true;
+	}
+	
+	public boolean isDead() {
+		return health <= 0;
+	}
+	
+	public boolean isAI() {
+		return isAI;
 	}
 }

@@ -2,12 +2,11 @@ package daedalus.ld;
 
 import com.badlogic.gdx.Gdx;
 
-import daedalus.entity.Character;
-import daedalus.entity.NPC;
+import daedalus.entity.Entity;
 
-public class Hero extends Character {
+public class Hero extends Entity {
 	public Hero() {
-		super("chief");
+		super("chief", 100, 2, false);
 		colorIndex = 1;
 	}
 	
@@ -21,7 +20,7 @@ public class Hero extends Character {
 	
 	public void tick() {
 		super.tick();
-		if(hasLOS(LDMain.other)) colorIndex = 0;
-		else colorIndex = 1;
+//		if(hasLOS(LDMain.other)) colorIndex = 0;
+//		else colorIndex = 1;
 	}
 }

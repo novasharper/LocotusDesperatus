@@ -14,28 +14,87 @@ import daedalus.entity.Entity;
 import daedalus.graphics.GraphicsElement;
 import daedalus.graphics.Sprite;
 import daedalus.graphics.SpriteEngine;
+import daedalus.input.F310;
+import daedalus.input.GamepadEvent;
+import daedalus.input.GamepadEvent.ComponentType;
+import daedalus.input.GamepadEvent.EventType;
+import daedalus.input.IGamepadEventHandler;
+import daedalus.ld.LDMain;
 import daedalus.level.Level;
 import daedalus.level.Tile;
 import daedalus.main.GameComponent;
 
 
-public abstract class Weapon implements GraphicsElement {
+public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	protected Entity wielder;
 	protected int power_loaded;
 	protected int power_reserve;
 	protected int range;
+	public static boolean aimAssist = true;
+	private double assistRange = Math.PI / 24;
 	
 	public Weapon(Entity wielder) {
 		this.wielder = wielder;
 		power_loaded = getMaxLoad();
 		power_reserve = getMaxReserve();
-		range = 10;
+		range = 5;
+		if(!wielder.isAI()) GameComponent.getGamePad().addEventHandler(this);
 	}
 	
-	public double fireLen() {
+	public double getRotAimAssist() {
+		if(!aimAssist) return wielder.getRot();
+		for(Entity entity : LDMain.ldm.entities) {
+			if(entity == wielder) continue;
+			else if(wielder.hasLOS(entity, assistRange, false) && wielder.getLoc().distance(entity.getLoc()) <= range) {
+				double angle = Math.PI + Math.atan2(wielder.getDrawY() - entity.getDrawY(), wielder.getDrawX() - entity.getDrawX());
+				double fudge = (wielder.getRot() - angle);
+				if(Math.abs(fudge) > assistRange) return wielder.getRot();
+				fudge *= (1 - Math.pow(Math.cos(Math.abs(fudge / assistRange * Math.PI)), 7)) / 2;
+				return angle + fudge;
+			}
+		}
+		return wielder.getRot();
+	}
+	
+	double ticks = 0;
+	public void tryFire() {
+		Entity target = null;
+		double cd = 0;
+		for(Entity entity : LDMain.ldm.entities) {
+			double nd = wielder.getLoc().distance(entity.getLoc());
+			if(wielder.hasLOS(entity, assistRange * 3 / 2, false) && wielder.getLoc().distance(entity.getLoc()) <= range) {
+				if((target == null || nd < cd) && nd * GameComponent.tileSize > 10) {
+					target = entity;
+					cd = nd;
+				}
+			}
+		}
+		target(target);
+	}
+	
+	private boolean toggle = false;
+	public void tick() {
+		boolean shouldFire = shouldFire();
+		if(!shouldFire) {
+			toggle = false;
+			return;
+		}
+		boolean forceFire = (toggle == false) && shouldFire;
+		toggle = true;
+		if(forceFire) tryFire();
+		else {
+			ticks += 1000 / GameComponent.framerate;
+			while(ticks >= 1000 / roundsPerSecond()) {
+				tryFire();
+				ticks -= 1000 / roundsPerSecond();
+			}
+		}
+	}
+	
+	private double fireLen() {
 		int res = GameComponent.tileSize;
 		
-		double rot = wielder.getRot();
+		double rot = getRotAimAssist();
 		double leny2 = range * res * Math.abs(Math.sin(rot));
 		double lenx2 = range * res * Math.abs(Math.cos(rot));
 		
@@ -72,37 +131,40 @@ public abstract class Weapon implements GraphicsElement {
 	}
 	
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
+		if(!shouldDrawFire()) return;
 		Point2D.Double drawLoc = wielder.getDrawLoc();
-		double rot = wielder.getRot();
+		double rot = getRotAimAssist();
 		sr.begin(ShapeType.Line);
 		sr.setColor(Color.WHITE);
-		double leny = Gdx.graphics.getHeight() / 2, lenx = Gdx.graphics.getWidth() / 2;
-		double leny2 = Math.min(leny, lenx * Math.abs(Math.sin(rot) / Math.cos(rot)));
-		double lenx2 = Math.min(lenx, leny * Math.abs(Math.cos(rot) / Math.sin(rot)));
-		double len = Math.sqrt(lenx2 * lenx2 + leny2 * leny2);
-		len = Math.min(Math.max(20, fireLen()), 3 * GameComponent.tileSize);
+		double len = Math.max(20, fireLen());
 		sr.line((float) (drawLoc.x + 20 * Math.cos(rot)), (float) (drawLoc.y + 20 * Math.sin(rot)),
 				(float) (drawLoc.x + len * Math.cos(rot)), (float) (drawLoc.y + len * Math.sin(rot)));
 		sr.end();
 	}
 	
 	public abstract String getName();
+	
 	public String getSpriteName() {
 		return getName() + ".sprite";
 	}
+	
 	public String getHudSpriteName() {
 		return getName() + ".hudsprite";
 	}
+	
 	public void target(Entity target) {
-		if(power_loaded <= 0) return;
-		target.damage(getDamage());
-		power_loaded -= 1;
+			if(power_loaded <= 0) return;
+			if(target != null) target.damage(getDamage());
+			power_loaded -= 1;
 	}
 	
+	public abstract boolean shouldFire();
+	public abstract boolean shouldDrawFire();
 	public abstract float getDamage();
 	public abstract int getMaxLoad();
 	public abstract int getMaxReserve();
 	public abstract int getPowerPerUse();
+	public abstract double roundsPerSecond();
 	
 	public int getLoad() {
 		return power_loaded;
@@ -127,7 +189,21 @@ public abstract class Weapon implements GraphicsElement {
 		}
 	}
 	
+	public void reload() {
+		int delta = getMaxLoad() - power_loaded;
+		power_loaded += Math.min(power_reserve, delta);
+		power_reserve -= delta;
+	}
+	
 	public void changeWielder(Entity wielder) {
 		this.wielder = wielder;
+	}
+
+	@Override
+	public void handleInput(GamepadEvent ev) {
+		if(ev.getButtonID() == F310.BUTTON_L && ev.getCType() == ComponentType.BUTTON &&
+				ev.getType() == EventType.RELEASED && !shouldFire()) {
+			reload();
+		}
 	}
 }

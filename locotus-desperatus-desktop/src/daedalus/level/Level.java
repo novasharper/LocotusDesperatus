@@ -91,7 +91,7 @@ public class Level {
 		this.map = new Tile[height][width];
 		for(int y = 0; y < height; y++) {
 			for(int x = 0; x < width; x++) {
-				map[y][x] = new Tile(x, y, null, 0, 0, 0);
+				map[y][x] = new Tile(x, y, null, 1, 0, 0);
 			}
 		}
 	}
