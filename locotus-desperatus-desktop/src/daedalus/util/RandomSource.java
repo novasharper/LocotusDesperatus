@@ -9,19 +9,29 @@ public class RandomSource {
 	/**
 	 * glibc constants
 	 */
-	private static final long a = 1103515245;
-	private static final long b = 12345;
-	private static final long m = 1 << 31;
+	public static final long a = 1103515245;
+	public static final long b = 12345;
+	public static final long m = 1 << 31;
 	
 	/**
 	 * Current value
 	 */
-	private static long current = System.nanoTime();
+	private long current;
+
+    
+    public RandomSource(long seed) {
+        current = seed;
+        System.out.println(seed);
+    }
+
+    public RandomSource() {
+        this(System.nanoTime());
+    }
 	
 	/**
 	 * Get next int value (just cast from long)
 	 */
-	public static int nextInt() {
+	public int nextInt() {
 		return (int) nextLong();
 	}
 	
@@ -30,8 +40,13 @@ public class RandomSource {
 	 * For algorithm, look at:
 	 * http://en.wikipedia.org/wiki/Linear_congruential_generator
 	 */
-	public static long nextLong() {
-		current = (a * current + b) & (m - 1);
+	public long nextLong() {
+		current = Math.abs((a * current + b) & (m - 1));
 		return current;
 	}
+
+    public double nextDouble() {
+        return Math.abs((nextLong() & (m - 1)) * 1.0) / m;
+    }
 }
+

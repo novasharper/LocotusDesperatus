@@ -1,5 +1,10 @@
 package daedalus.sound;
 
+public class SoundContext {
+	
+}
+
+/*
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -99,3 +104,4 @@ public class SoundContext {
 		return ctxt;
 	}
 }
+*/

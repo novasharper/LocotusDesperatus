@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -20,6 +21,7 @@ import daedalus.level.*;
 import daedalus.main.GameComponent;
 import daedalus.main.GameContext;
 import daedalus.main.Path;
+import daedalus.util.RandomSource;
 
 
 
@@ -33,10 +35,11 @@ public class LDMain extends GameContext {
 	
 	public LDMain() {
 		entities = new ArrayList<Entity>();
-		for(int i = 0; i < 9; i++) {
+		for(int i = 0; i < 1; i++) {
 			AIEntity other = new AIEntity("Chief");
-			other.setX(0.5 + i % 3);
-			other.setY(0.5 + i / 3);
+			other.setX(1.5 + i % 3);
+			other.setY(1.5 + i / 3);
+			other.equip(new AssaultRifle(other));
 			entities.add(other);
 		}
 		chief = new Hero();
@@ -81,22 +84,24 @@ public class LDMain extends GameContext {
 	}
 	
 	public void init() {
+//		long t = 5007246394038L; //System.nanoTime();
+		Random rand = new Random(); // new Random(t);
 		xRadius = (int) (GameComponent.getGame().width / GameComponent.tileSize) / 2 + 1;
 		yRadius = (int) (GameComponent.getGame().height / GameComponent.tileSize) / 2 + 1;
 		map = new Level(30, 20);
 		for(int r = 0; r < map.getHeight(); r++) {
 			for(int c = 0; c < map.getWidth(); c++) {
-				map.getTile(c, r).setPassable(Math.random() < .8 ||
+				map.getTile(c, r).setPassable(rand.nextDouble() < .8 ||
 						((r - chief.getLoc().y) * (r - chief.getLoc().y) + (c - chief.getLoc().x) * (c - chief.getLoc().x) <= 2.5 * 2.5) ||
 						((r - map.getHeight() + 2) * (r - map.getHeight() + 2) + (c - map.getWidth() + 2) * (c - map.getWidth() + 2) <= 1.5 * 1.5));
 			}
 		}
 		for(Entity e : entities) {
 			if(e instanceof AIEntity) {
-				int xf = (int) (Math.random() * 30);
-				int yf = (int) (Math.random() * 20);
+				int xf = (int) (rand.nextDouble() * 30);
+				int yf = (int) (rand.nextDouble() * 20);
 				Point[] path = Pathfinding.ASTAR(map, map.getTile((int) e.getLoc().x, (int) e.getLoc().y), map.getTile(xf, yf));
-				((AIEntity) e).setPath(new Path(path, true, true));
+				((AIEntity) e).setPath(path);
 			}
 		}
 		Physics.setLevel(map);

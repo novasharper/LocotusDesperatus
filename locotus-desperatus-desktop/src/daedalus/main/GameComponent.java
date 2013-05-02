@@ -360,9 +360,9 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	public void dispose() {
 	}
 	
-	public static void main(String[] args) {
-		GameComponent.create("Test", 800, 600, true, false);
-		GameComponent.getGame().pushContext(new DaisyInput());
-		GameComponent.getGame().resume();
-	}
+//	public static void main(String[] args) {
+//		GameComponent.create("Test", 800, 600, true, false);
+//		GameComponent.getGame().pushContext(new DaisyInput());
+//		GameComponent.getGame().resume();
+//	}
 }

@@ -78,4 +78,8 @@ public class Util {
 		if(mid > 0 && mid < fname.length() - 1) ext = fname.substring(mid + 1);
 		return ext;
 	}
+	
+	public static double angleDifference(double a, double b) {
+		return Math.abs((a + Math.PI - b) % (Math.PI * 2) - Math.PI);
+	}
 }

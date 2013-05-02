@@ -1,5 +1,10 @@
 package daedalus.sound;
 
+public class SoundSystem {
+	
+}
+
+/*
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,3 +46,4 @@ public class SoundSystem {
 		TinySound.shutdown();
 	}
 }
+*/

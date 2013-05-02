@@ -2,6 +2,9 @@ package daedalus.main;
 
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.util.Arrays;
+
+import com.badlogic.gdx.Gdx;
 
 public class Path {
 	private Point[] points;
@@ -14,10 +17,12 @@ public class Path {
 		this.reverses = reverses;
 		direction = 1;
 		
+		if(points.length == 0) return;
 		int dxc = -1, dyc = -1;
+		Point last = points[0];
 		for(int i = 1; i < points.length; i++) {
-			Point last = points[i - 1];
 			Point current = points[i];
+			if(current == null) continue;
 			int la = (int) Math.toDegrees(Math.atan2(dyc, dxc));
 			int ca = (int) Math.toDegrees(Math.atan2(last.y - current.y, last.x - current.x));
 			if(la == ca && i != 1) {
@@ -25,6 +30,7 @@ public class Path {
 			}
 			dxc = last.x - current.x;
 			dyc = last.y - current.y;
+			last = current;
 		}
 	}
 	

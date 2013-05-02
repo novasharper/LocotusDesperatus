@@ -16,8 +16,8 @@ import com.google.gson.annotations.Expose;
 
 import daedalus.graphics.Sprite;
 import daedalus.graphics.SpriteEngine;
-import daedalus.sound.SoundContext;
-import daedalus.sound.SoundSystem;
+//import daedalus.sound.SoundContext;
+//import daedalus.sound.SoundSystem;
 
 public class Level {
 	public static class LevelInfo {
@@ -132,9 +132,9 @@ public class Level {
 				background = ImageIO.read(is);
 			}
 			// Load level-specific sound context
-			SoundContext ctxt = SoundContext.loadFromZip(zf);
-			if(ctxt != null)
-				SoundSystem.addContext(ctxt);
+//			SoundContext ctxt = SoundContext.loadFromZip(zf);
+//			if(ctxt != null)
+//				SoundSystem.addContext(ctxt);
 			// Close zip file
 			zf.close();
 		} catch (IOException e) {

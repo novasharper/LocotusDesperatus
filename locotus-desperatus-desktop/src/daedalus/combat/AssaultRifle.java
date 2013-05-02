@@ -48,6 +48,14 @@ public class AssaultRifle extends Weapon {
 		return 650. / 60;
 	}
 	
+	public void trigger() {
+		shouldDrawFire = shouldFire = true;
+	}
+	
+	public void releaseTrigger() {
+		shouldDrawFire = shouldFire = false;
+	}
+	
 	public void handleInput(GamepadEvent ev) {
 		super.handleInput(ev);
 		if(ev.getButtonID() == F310.BUTTON_R && ev.getCType() == ComponentType.BUTTON) {

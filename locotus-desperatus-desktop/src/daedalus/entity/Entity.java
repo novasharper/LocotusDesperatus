@@ -1,5 +1,6 @@
 package daedalus.entity;
 
+import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
@@ -22,6 +23,7 @@ import daedalus.ld.LDMain;
 import daedalus.level.Level;
 import daedalus.level.Tile;
 import daedalus.main.GameComponent;
+import daedalus.util.Util;
 
 
 public abstract class Entity implements GraphicsElement {
@@ -102,7 +104,7 @@ public abstract class Entity implements GraphicsElement {
 		if(isAI) {
 			float barWidth = 60;
 			BitmapFont font = Root.getFont(12);
-			String label = "" + name;
+			String label = getLabel();
 			sb.begin();
 			sb.enableBlending();
 			font.setColor(Color.WHITE);
@@ -145,6 +147,8 @@ public abstract class Entity implements GraphicsElement {
 			arms.get(0).tick();
 		}
 	}
+	
+	protected String getLabel() { return name; }
 	
 	protected void aiTick() {
 	}
@@ -226,6 +230,45 @@ public abstract class Entity implements GraphicsElement {
 		return hasLOS(other, Math.PI / 4, getRot());
 	}
 	
+	public boolean hasLOS(Entity other, double halfFovX) {
+		return hasLOS(other, halfFovX, getRot());
+	}
+	
+	public boolean canReach(Point2D.Double other) {
+		int res = 25;
+		int x0 = (int) (location.x * res);
+		int x1 = (int) (other.x * res);
+		int y0 = (int) (location.y * res);
+		int y1 = (int) (other.y * res);
+	    double rot = Math.atan2(y1 - y0, x1 - x0);
+	    double angle = getRot();
+		int dx =  Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+	    int dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+	    if(Math.abs(dy) >= Gdx.graphics.getHeight() / 2) return false;
+	    if(dx >= Gdx.graphics.getWidth() / 2) return false;
+	    int err = dx + dy, e2;
+	    
+		Level lvl = Physics.getLevel();
+
+	    for (;;) {
+	    	if(!lvl.getTile(x0 / res, y0 / res).isPassable()) return false;
+
+	        if (x0 == x1 && y0 == y1) break;
+
+	        e2 = 2 * err;
+
+	        // EITHER horizontal OR vertical step (but not both!)
+	        if (e2 > dy) { 
+	            err += dy;
+	            x0 += sx;
+	        } else if (e2 < dx) { // <--- this "else" makes the difference
+	            err += dx;
+	            y0 += sy;
+	        }
+	    }
+	    return true;
+	}
+	
 	public boolean hasLOS(Entity other, double halfFovX, double overrideAngle) {
 		int res = 25;
 		int x0 = (int) (location.x * res);
@@ -235,11 +278,11 @@ public abstract class Entity implements GraphicsElement {
 	    double rot = Math.atan2(y1 - y0, x1 - x0);
 	    double angle = getRot();
 	    if(overrideAngle > 0) angle = overrideAngle;
-	    if(Math.abs((angle + Math.PI - rot) % (Math.PI * 2) - Math.PI) > halfFovX) return false;
+	    if(Util.angleDifference(angle, rot) > halfFovX) return false;
 		int dx =  Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	    int dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-	    if(Math.abs(dy) >= Gdx.graphics.getHeight() / 2) return false;
-	    if(dx >= Gdx.graphics.getWidth() / 2) return false;
+	    if(Math.abs(dy * 1.0 / res) >= Gdx.graphics.getHeight() / (2 * GameComponent.tileSize)) return false;
+	    if(dx * 1.0 / res >= Gdx.graphics.getWidth() / (2 * GameComponent.tileSize)) return false;
 	    int err = dx + dy, e2;
 	    
 		Level lvl = Physics.getLevel();

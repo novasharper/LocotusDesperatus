@@ -53,4 +53,8 @@ public class TranslationAnimation extends Animation {
 		newAnim.start = (Point2D.Double) end.clone();
 		return newAnim;
 	}
+	
+	public Point2D.Double getDest() {
+		return (Point2D.Double) end.clone();
+	}
 }

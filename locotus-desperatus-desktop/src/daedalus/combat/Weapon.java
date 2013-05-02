@@ -52,7 +52,7 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	}
 	
 	double ticks = 0;
-	public void tryFire() {
+	public void fire() {
 		Entity target = null;
 		double cd = 0;
 		for(Entity entity : LDMain.ldm.entities) {
@@ -76,11 +76,11 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 		}
 		boolean forceFire = (toggle == false) && shouldFire;
 		toggle = true;
-		if(forceFire) tryFire();
+		if(forceFire) fire();
 		else {
 			ticks += 1000 / GameComponent.framerate;
 			while(ticks >= 1000 / roundsPerSecond()) {
-				tryFire();
+				fire();
 				ticks -= 1000 / roundsPerSecond();
 			}
 		}
@@ -149,7 +149,7 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	
 	public void target(Entity target) {
 			if(power_loaded <= 0) return;
-			if(target != null) target.damage(getDamage());
+			if(target != null) target.damage(getDamage() * (wielder.isAI() ? 0.5f : 1.0f));
 			power_loaded -= 1;
 	}
 	
@@ -160,6 +160,8 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	public abstract int getMaxReserve();
 	public abstract int getPowerPerUse();
 	public abstract double roundsPerSecond();
+	public abstract void trigger();
+	public abstract void releaseTrigger();
 	
 	public int getLoad() {
 		return power_loaded;
