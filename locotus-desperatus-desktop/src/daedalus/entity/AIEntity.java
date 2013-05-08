@@ -28,9 +28,10 @@ public class AIEntity extends Entity {
 	protected float notOnPatrol;
 	protected double turnRateCap;
 	protected double chaseSpeedCap;
+	protected boolean friendly = true;
 	
-	public AIEntity(String name) {
-		super(name, 100, 1, true);
+	public AIEntity() {
+		super(100, 1, true);
 		animQueue = new LinkedList<Animation>();
 		turnRateCap = 0.03;
 		chaseSpeedCap = 0.01;
@@ -42,29 +43,31 @@ public class AIEntity extends Entity {
 	private double reloadTimer = -1;
 	public void aiTick() {
 		hasLOS = false;
-		if(hasLOS(LDMain.ldm.chief)) {
-			notOnPatrol += 2f;
-			chiefLoc = (Point2D.Double) LDMain.ldm.chief.location.clone();
-			targetRot = Math.atan2(chiefLoc.y - location.y, chiefLoc.x - location.x);
-			while(targetRot < 0) targetRot += Math.PI * 2;
-			hasLOS = true;
-		}
-		else if(notOnPatrol > 0) {
-			notOnPatrol -= 1f;
-			if(notOnPatrol < 0) notOnPatrol = 0;
-			if(notOnPatrol == 0) {
-				// Return to patrol
-				chiefLoc = null;
-				if(pathPoints.length > 0) {
-					if(!canReach(new Point2D.Double(pathPoints[0].x, pathPoints[0].y))) {
-						Tile t2 = Physics.getLevel().getTile(pathPoints[0].x, pathPoints[0].y);
-						Tile t1 = Physics.getLevel().getTile((int) (Math.floor(getLoc().x)), (int) (Math.floor(getLoc().y)));
-						pathPointsBak = Pathfinding.ASTAR(Physics.getLevel(), t1, t2);
-					} else {
-						moveTo(new Point2D.Double(pathPoints[0].x, pathPoints[0].y));
+		if(!friendly) {
+			if(hasLOS(LDMain.ldm.chief)) {
+				notOnPatrol += 2f;
+				chiefLoc = (Point2D.Double) LDMain.ldm.chief.location.clone();
+				targetRot = Math.atan2(chiefLoc.y - location.y, chiefLoc.x - location.x);
+				while(targetRot < 0) targetRot += Math.PI * 2;
+				hasLOS = true;
+			}
+			else if(notOnPatrol > 0) {
+				notOnPatrol -= 1f;
+				if(notOnPatrol < 0) notOnPatrol = 0;
+				if(notOnPatrol == 0) {
+					// Return to patrol
+					chiefLoc = null;
+					if(pathPoints.length > 0) {
+						if(!canReach(new Point2D.Double(pathPoints[0].x, pathPoints[0].y))) {
+							Tile t2 = Physics.getLevel().getTile(pathPoints[0].x, pathPoints[0].y);
+							Tile t1 = Physics.getLevel().getTile((int) (Math.floor(getLoc().x)), (int) (Math.floor(getLoc().y)));
+							pathPointsBak = Pathfinding.ASTAR(Physics.getLevel(), t1, t2);
+						} else {
+							moveTo(new Point2D.Double(pathPoints[0].x, pathPoints[0].y));
+						}
 					}
+					path = null;
 				}
-				path = null;
 			}
 		}
 		if(notOnPatrol > 0) {
@@ -110,6 +113,7 @@ public class AIEntity extends Entity {
 			}
 			if(!hasLOS && !moved) {
 				rotation += turnRateCap;
+				while(rotation > Math.PI * 2) rotation -= Math.PI * 2;
 				targetRot = rotation;
 			}
 		} else {

@@ -17,7 +17,7 @@ import daedalus.input.GamepadEvent.ComponentType;
 import daedalus.input.GamepadEvent.EventType;
 
 public class Gamepad extends ControllerAdapter {
-	public static final float deadzone = 0.004f;
+	public static final float deadzone = 0.01f;
 	public static final float rot_deadzone = 0.01f;
 	
 	private ArrayList<IGamepadEventHandler> handlers;

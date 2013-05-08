@@ -32,21 +32,21 @@ public class LDMain extends GameContext {
 	public List<Entity> entities;
 	public static LDMain ldm;
 	private int xRadius, yRadius;
+	private Spawner spawner;
+	private Turret tr;
 	
 	public LDMain() {
 		entities = new ArrayList<Entity>();
-		for(int i = 0; i < 1; i++) {
-			AIEntity other = new AIEntity("Chief");
-			other.setX(1.5 + i % 3);
-			other.setY(1.5 + i / 3);
-			other.equip(new AssaultRifle(other));
-			entities.add(other);
-		}
 		chief = new Hero();
 		chief.setX(0.5);
 		chief.setY(0.5);
 		chief.equip(new AssaultRifle(chief));
 		entities.add(chief);
+		//spawner = new Spawner(AIEntity.class, new Point(1, 1), 1.5);
+		tr = new Turret();
+		tr.setX(1.5);
+		tr.setY(1.5);
+		entities.add(tr);
 		try {
 			SpriteEngine.loadSprite("ma5c.hudsprite", "ld/res/rifle_hud.png");
 		} catch (IOException e) {
@@ -57,8 +57,8 @@ public class LDMain extends GameContext {
 	@Override
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
 		sr.begin(ShapeType.Filled);
-		sr.setColor(Color.BLACK);
-		sr.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+//		sr.setColor(Color.BLACK);
+//		sr.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		sr.setColor(0.7f, 0.8f, 1f, 1f);
 		float fuzzX = (float) chief.getLoc().x % 2;
 		float fuzzY = (float) chief.getLoc().y % 2;
@@ -81,6 +81,7 @@ public class LDMain extends GameContext {
 		for(Entity entity : entities) {
 			entity.render(sb, sr);
 		}
+		tr.render(sb, sr);
 	}
 	
 	public void init() {
@@ -115,6 +116,8 @@ public class LDMain extends GameContext {
 				i--;
 			}
 		}
+		if(spawner != null)
+			spawner.tick();
 	}
 	
 	public Tile getTile(int x, int y) {
@@ -126,7 +129,7 @@ public class LDMain extends GameContext {
 	}
 	
 	public static void main(String[] args) {
-		GameComponent.create("Locotus Desperatus", 1280, 704, true, true);
+		GameComponent.create("Locotus Desperatus", 1280, 704, true, false);
 		GameComponent.getGame().pushContext(new LDMain());
 		GameComponent.getGame().pushContext(new HUD(ldm.chief));
 		GameComponent.getGame().start();

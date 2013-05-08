@@ -149,7 +149,10 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	
 	public void target(Entity target) {
 			if(power_loaded <= 0) return;
-			if(target != null) target.damage(getDamage() * (wielder.isAI() ? 0.5f : 1.0f));
+			if(target != null) {
+				target.damage(getDamage() * (wielder.isAI() ? 0.6f : 1.0f));
+				target.alert(wielder);
+			}
 			power_loaded -= 1;
 	}
 	

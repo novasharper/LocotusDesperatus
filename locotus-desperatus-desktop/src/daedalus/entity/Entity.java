@@ -29,7 +29,7 @@ import daedalus.util.Util;
 public abstract class Entity implements GraphicsElement {
 	protected Point2D.Double location;
 	protected double rotation;
-	protected String name;
+//	protected String name;
 	protected float health;
 	protected float maxHealth;
 	protected long lastDamage;
@@ -38,7 +38,7 @@ public abstract class Entity implements GraphicsElement {
 	protected LinkedList<Weapon> arms;
 	protected int colorIndex = 5;
 	
-	private static final Color[][] colorSet = {
+	public static final Color[][] colorSet = {
 		{ new Color(0.75f, 0f, 0f, 0.9f), new Color(1, 0, 0, 1) },
 		{ new Color(0f, 0.75f, 0f, 0.9f), new Color(0, 1, 0, 1) },
 		{ new Color(0f, 0f, 0.75f, 0.9f), new Color(0, 0, 1, 1) },
@@ -47,8 +47,8 @@ public abstract class Entity implements GraphicsElement {
 		{ new Color(0.75f, 0f, 0.75f, 0.9f), new Color(1, 0, 1, 1) }
 	};
 	
-	public Entity(String name, float maxHealth, double speed, boolean isAI) {
-		this.name = name;
+	public Entity(float maxHealth, double speed, boolean isAI) {
+//		this.name = name;
 		this.location = new Point2D.Double();
 		this.rotation = 0;
 		this.maxHealth = maxHealth;
@@ -103,6 +103,7 @@ public abstract class Entity implements GraphicsElement {
 			arms.getFirst().render(sb, sr);
 		if(isAI) {
 			float barWidth = 60;
+			/*
 			BitmapFont font = Root.getFont(12);
 			String label = getLabel();
 			sb.begin();
@@ -111,6 +112,7 @@ public abstract class Entity implements GraphicsElement {
 			font.draw(sb, label, (float) getDrawX() - font.getBounds(label).width / 2,
 					(float) getDrawY() + 40 + font.getBounds(label).height);
 			sb.end();
+			*/
 			sr.begin(ShapeType.Filled);
 			float red = Math.min(1f, 2f * (1f - health / maxHealth));
 			float green = Math.min(1f, 2f * (health / maxHealth));
@@ -148,7 +150,7 @@ public abstract class Entity implements GraphicsElement {
 		}
 	}
 	
-	protected String getLabel() { return name; }
+//	protected String getLabel() { return name; }
 	
 	protected void aiTick() {
 	}
@@ -171,10 +173,6 @@ public abstract class Entity implements GraphicsElement {
 	
 	public Point2D.Double getDrawLoc() {
 		return new Point2D.Double(getDrawX(), getDrawY());
-	}
-	
-	public String getSpriteName() {
-		return this.name + ".sprite";
 	}
 	
 	public Point2D.Double getLoc() {
@@ -312,5 +310,8 @@ public abstract class Entity implements GraphicsElement {
 	
 	public boolean isAI() {
 		return isAI;
+	}
+	
+	public void alert(Entity other) { // Can be used when firing
 	}
 }

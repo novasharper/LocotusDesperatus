@@ -133,7 +133,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		for(GameContext ctxt : gameContextStack) ctxt.init();
 		if(pauseMenu != null) pauseMenu.init();
 		GamepadMapping.load();
-		Mouse.setGrabbed(true);
+//		Mouse.setGrabbed(true);
 		initDone = true;
 	}
 	
@@ -324,8 +324,8 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	}
 	public void render() {
 		tick();
-		Gdx.gl.glClearColor(1, 1, 1, 1);
-		Gdx.gl.glClear(GL11.GL_COLOR_BUFFER_BIT);
+		Gdx.graphics.getGL20().glClearColor(0.2f, 0.2f, 0.2f, 1);
+		Gdx.graphics.getGL20().glClear(GL11.GL_COLOR_BUFFER_BIT);
 		if(paused && pauseMenu != null) pauseMenu.render(sb, sr);
 		else {
 			if(gameContextStack.isEmpty()) return;

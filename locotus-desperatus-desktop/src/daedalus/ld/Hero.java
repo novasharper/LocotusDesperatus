@@ -6,7 +6,7 @@ import daedalus.entity.Entity;
 
 public class Hero extends Entity {
 	public Hero() {
-		super("chief", 100, 2, false);
+		super(100, 2, false);
 		colorIndex = 1;
 	}
 	
