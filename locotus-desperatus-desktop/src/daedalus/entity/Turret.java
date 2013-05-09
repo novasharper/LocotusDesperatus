@@ -1,6 +1,6 @@
 package daedalus.entity;
 
-import testerjunk.MeshHelper;
+import daedalus.graphics.MeshHelper;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;

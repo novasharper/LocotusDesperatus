@@ -1,6 +1,8 @@
 package daedalus.util;
 
 import java.io.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class Util {
 	private static File workdir = null;
@@ -81,5 +83,49 @@ public class Util {
 	
 	public static double angleDifference(double a, double b) {
 		return Math.abs((a + Math.PI - b) % (Math.PI * 2) - Math.PI);
+	}
+	
+	public static void extractZipNative(File zipFile) {
+		try {
+			String dest = zipFile.getParent() + File.separatorChar;
+			System.out.println(dest);
+			byte[] buf = new byte[1024];
+			ZipInputStream in = null;
+			ZipEntry zipentry;
+			in = new ZipInputStream(new FileInputStream(zipFile));
+
+			zipentry = in.getNextEntry();
+			while (zipentry != null) {
+				// for each entry to be extracted
+				String entryName = dest + zipentry.getName();
+				entryName = entryName.replace('/', File.separatorChar);
+				entryName = entryName.replace('\\', File.separatorChar);
+				int n;
+				FileOutputStream out;
+				File newFile = new File(entryName);
+				if (zipentry.isDirectory()) {
+					if (!newFile.mkdirs()) {
+						break;
+					}
+					zipentry = in.getNextEntry();
+					continue;
+				}
+
+				out = new FileOutputStream(entryName);
+
+				while ((n = in.read(buf, 0, 1024)) > -1) {
+					out.write(buf, 0, n);
+				}
+
+				out.close();
+				in.closeEntry();
+				zipentry = in.getNextEntry();
+
+			}// while
+
+			in.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
