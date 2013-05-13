@@ -30,6 +30,5 @@ public class TestMenu extends Menu {
 		GameComponent.create("GUI Test", 800, 600, true, false);
 		Menu menu = new TestMenu();
 		GameComponent.getGame().setPauseMenu(menu);
-		GameComponent.getGame().start();
 	}
 }

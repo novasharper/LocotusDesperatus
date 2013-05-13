@@ -52,7 +52,6 @@ public class TestMainMenu extends Menu {
 		Menu menu = new TestMenu();
 		GameComponent.getGame().setPauseMenu(menu);
 		GameComponent.getGame().pushContext(new TestMainMenu());
-		GameComponent.getGame().start();
 		GameComponent.getGame().resume();
 	}
 }

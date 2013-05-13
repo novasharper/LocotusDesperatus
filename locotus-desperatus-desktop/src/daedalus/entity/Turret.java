@@ -1,5 +1,7 @@
 package daedalus.entity;
 
+import daedalus.game.LocotusDesperatus;
+import daedalus.game.Main;
 import daedalus.graphics.MeshHelper;
 
 import com.badlogic.gdx.Gdx;
@@ -18,7 +20,6 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import static daedalus.entity.Entity.colorSet;
 
 import daedalus.Root;
-import daedalus.ld.LDMain;
 import daedalus.main.GameComponent;
 
 public class Turret extends Entity {
@@ -29,11 +30,11 @@ public class Turret extends Entity {
 	}
 	
 	public double getDrawX() {
-		return (getLoc().x - LDMain.ldm.chief.getLoc().x) * GameComponent.tileSize + Gdx.graphics.getWidth() / 2;
+		return (getLoc().x - Main.game.getHero().getLoc().x) * GameComponent.tileSize + Gdx.graphics.getWidth() / 2;
 	}
 	
 	public double getDrawY() {
-		return (getLoc().y - LDMain.ldm.chief.getLoc().y) * GameComponent.tileSize + Gdx.graphics.getHeight() / 2;
+		return (getLoc().y - Main.game.getHero().getLoc().y) * GameComponent.tileSize + Gdx.graphics.getHeight() / 2;
 	}
 	private ShaderProgram meshShader;
 	private void createShader() {

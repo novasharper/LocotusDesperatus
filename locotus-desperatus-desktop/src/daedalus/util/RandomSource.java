@@ -12,6 +12,7 @@ public class RandomSource {
 	public static final long a = 1103515245;
 	public static final long b = 12345;
 	public static final long m = 1 << 31;
+	public static final RandomSource rs = new RandomSource();
 	
 	/**
 	 * Current value
@@ -21,7 +22,6 @@ public class RandomSource {
     
     public RandomSource(long seed) {
         current = seed;
-        System.out.println(seed);
     }
 
     public RandomSource() {
@@ -32,7 +32,7 @@ public class RandomSource {
 	 * Get next int value (just cast from long)
 	 */
 	public int nextInt() {
-		return (int) nextLong();
+		return (int) (nextLong() % Integer.MAX_VALUE);
 	}
 	
 	/**

@@ -1,6 +1,7 @@
 package daedalus.main;
 
 import daedalus.Root;
+import daedalus.graphics.GStreamerLibrary;
 import daedalus.gui.*;
 import daedalus.input.Gamepad;
 import daedalus.input.GamepadEvent;
@@ -9,16 +10,14 @@ import daedalus.input.GamepadEvent.EventType;
 import daedalus.input.IGamepadEventHandler;
 import daedalus.input.F310;
 import daedalus.settings.GamepadMapping;
+import daedalus.sound.SoundSystem;
 import daedalus.util.ScreenshotSaver;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.*;
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
-
-import org.lwjgl.input.Mouse;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -43,12 +42,11 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
  * @author pat
  *
  */
-public final class GameComponent extends InputAdapter implements Runnable, IGamepadEventHandler, ApplicationListener {
+public final class GameComponent extends InputAdapter implements IGamepadEventHandler, ApplicationListener {
 	private static GameComponent game;
 	public final int width, height;
 	private boolean running;
-	private Thread gameThread;
-	public static final double framerate = 60;
+	public static final int framerate = 60;
 	public static final int tileSize = 128;
 	private LinkedList<GameContext> gameContextStack;
 	private LinkedList<KeyEvent> keyEventQueue;
@@ -60,6 +58,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	private boolean exitKeyPressed = false;
 	private final int exitKey = Keys.ESCAPE;
 	private boolean paused = false;
+	private boolean fullscreen;
 	private SpriteBatch sb;
 	private ShapeRenderer sr;
 	private OrthographicCamera camera;
@@ -99,13 +98,27 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		cfg.resizable = false;
 		cfg.vSyncEnabled = true;
 		cfg.samples = 4;
+		cfg.foregroundFPS = framerate + 1;
+		cfg.backgroundFPS = framerate + 1;
+		cfg.disableAudio = true;
 		
 		if(useGamepad) {
 			gamepad = new Gamepad();
 			gamepad.addEventHandler(this);
 		}
 		
+		this.fullscreen = fullscreen;
+		
 		new LwjglApplication(this, cfg);
+	}
+	
+	public static int getSize() {
+		if(game == null) return -1;
+		if(!game.fullscreen) return game.height;
+		else {
+			GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+			return gd.getDisplayMode().getHeight();
+		}
 	}
 	
 	public static void toggleFPSCounter() {
@@ -133,7 +146,6 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		for(GameContext ctxt : gameContextStack) ctxt.init();
 		if(pauseMenu != null) pauseMenu.init();
 		GamepadMapping.load();
-//		Mouse.setGrabbed(true);
 		initDone = true;
 	}
 	
@@ -149,6 +161,7 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	 * Tick. There are [framerate] ticks per second.
 	 */
 	private void tick() {
+		SoundSystem.update();
 		if(useGamepad) gamepad.tick();
 		if(exitKeyPressed) {
 			if(pauseMenu == null) { stop(); return; }
@@ -212,74 +225,10 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		return false;
 	}
 	
-	/**
-	 * Main loop
-	 */
-	public void run() {
-//		running = true;
-//		
-//		long lastTime = System.nanoTime();
-//		// Number of unprocessed events
-//		double unprocessed = 0;
-//		
-//		try {
-//			init();
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			return;
-//		}
-//		
-//		int toTick = 0;
-//		
-//		while(running) {
-//			double nsPerTick = 1000000000.0 / framerate;
-//			
-//			while (unprocessed >= 1) {
-//				toTick++;
-//				unprocessed -= 1;
-//			}
-//			
-//			int tickCount = toTick;
-//			if (toTick > 0 && toTick < 3) {
-//				tickCount = 1;
-//			}
-//			if (toTick > 20) {
-//				toTick = 20;
-//			}
-//			
-//			for (int i = 0; i < tickCount; i++) {
-//				toTick--;
-//				tick();
-//			}
-//			long now = System.nanoTime();
-//			unprocessed += (now - lastTime) / nsPerTick;
-//			lastTime = now;
-//			
-//			try {
-//				Thread.sleep(1);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		
-//		GamepadMapping.save();
-//		
-//		Gdx.app.exit();
-	}
-	
-	public void start() {
-		// Game has already been started
-		if(gameThread != null) return;
-		// Create game thread
-		gameThread = new Thread(this, "game-thread");
-		// Start game
-		gameThread.start();
-	}
-	
 	public void stop() {
 		GamepadMapping.save();
+		SoundSystem.shutdown();
 		Gdx.app.exit();
-//		running = false;
 	}
 	
 	public void handleInput(GamepadEvent ev) {
@@ -295,7 +244,6 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 		sr = new ShapeRenderer();
 		sb = new SpriteBatch();
 		init();
-//		start();
 	}
 	public void resize(int width, int height) {
 		camera = new OrthographicCamera(1, (float) height / width);
@@ -310,13 +258,15 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 			ScreenshotSaver.saveScreenshot();
 		} catch(IOException ex) {}
 		else if(keyid == Keys.F11) {
-			if(Gdx.graphics.isFullscreen()) {
+			if(fullscreen) {
 				Gdx.graphics.setDisplayMode(width, height, false);
+				fullscreen = false;
 			} else {
 				DisplayMode dm = Gdx.graphics.getDesktopDisplayMode();
 				Gdx.graphics.setDisplayMode(dm.width, dm.height, true);
+				fullscreen = true;
 			}
-			gamepad.reload();
+			if(gamepad != null) gamepad.reload();
 		} else if(keyid == Keys.F7) {
 			toggleFPSCounter();
 		}
@@ -359,10 +309,11 @@ public final class GameComponent extends InputAdapter implements Runnable, IGame
 	}
 	public void dispose() {
 	}
-	
-//	public static void main(String[] args) {
-//		GameComponent.create("Test", 800, 600, true, false);
-//		GameComponent.getGame().pushContext(new DaisyInput());
-//		GameComponent.getGame().resume();
-//	}
+
+	static {
+		try {
+			GStreamerLibrary.init();
+		} catch (Exception e) {
+		}
+	}
 }

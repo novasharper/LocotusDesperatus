@@ -1,4 +1,4 @@
-package daedalus;
+package daedalus.graphics;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;

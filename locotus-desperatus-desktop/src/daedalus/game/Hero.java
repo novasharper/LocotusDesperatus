@@ -1,4 +1,4 @@
-package daedalus.ld;
+package daedalus.game;
 
 import com.badlogic.gdx.Gdx;
 

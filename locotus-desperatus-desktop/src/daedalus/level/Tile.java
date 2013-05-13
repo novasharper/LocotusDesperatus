@@ -2,7 +2,6 @@ package daedalus.level;
 
 import java.awt.Point;
 
-import daedalus.graphics.Sprite;
 import daedalus.level.Level.TileInfo;
 
 public class Tile implements Comparable<Tile> {
@@ -107,10 +106,6 @@ public class Tile implements Comparable<Tile> {
 	
 	public String toString() {
 		return "" + location;
-	}
-	
-	public Sprite getSprite() {
-		return info.getSprite();
 	}
 	
 	public TileInfo getInfo() {

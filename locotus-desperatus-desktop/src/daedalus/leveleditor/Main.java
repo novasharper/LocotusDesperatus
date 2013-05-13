@@ -237,7 +237,7 @@ public class Main extends JFrame {
 						gr_.setColor(Color.white);
 						TileInfo info = tile.getInfo();
 						if(info != null) {
-							gr_.drawImage(info.getImage(), x * ts, y * ts, Main.this);
+//							gr_.drawImage(info.getImage(), x * ts, y * ts, Main.this);
 						}
 					}
 					if(x != 0) {

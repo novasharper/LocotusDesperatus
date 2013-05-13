@@ -1,38 +1,26 @@
 package daedalus.graphics;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Paint;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
-import javax.imageio.ImageIO;
-
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import daedalus.Root;
-import daedalus.main.GameComponent;
+import daedalus.util.Util;
 
 
 public class Sprite {
 	private File file;
 	private InputStream is;
-	private BufferedImage img;
 	private Texture tex;
-	private Pixmap pixmap;
 	private Point2D center;
 
 	public Sprite(String path) {
-		this(Root.class.getResourceAsStream(path));
+		this(new File(Util.getWorkingDir(), "resources/image/" + path));
 	}
 	
 	public Sprite(File imgFile) {
@@ -45,7 +33,7 @@ public class Sprite {
 	public void render(SpriteBatch sb, Point2D loc, double rot) {
 		render(sb, loc, center, rot);
 	}
-	public void render(SpriteBatch sb, Point2D loc, Point2D centerLoc, double rot) {
+	private void tryLoad() {
 		if(file != null) {
 			tex = new Texture(new FileHandle(file));
 			tex.setFilter(TextureFilter.Linear, TextureFilter.Linear);
@@ -61,7 +49,11 @@ public class Sprite {
 						tex.getHeight() / 2f);
 			is = null;
 		}
+	}
+	public void render(SpriteBatch sb, Point2D loc, Point2D centerLoc, double rot) {
+		if(file != null || is != null) tryLoad();
 		if(centerLoc == null) centerLoc = center;
+		if(tex == null) return;
 		sb.begin();
 		sb.enableBlending();
 		sb.draw(tex, (float) loc.getX(), (float) loc.getY(), (float) centerLoc.getX(), (float) centerLoc.getY(),

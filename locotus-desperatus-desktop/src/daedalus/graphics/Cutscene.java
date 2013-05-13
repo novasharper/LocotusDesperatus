@@ -2,8 +2,10 @@ package daedalus.graphics;
 
 import java.io.File;
 import java.nio.IntBuffer;
+import java.util.concurrent.TimeUnit;
 
 import org.gstreamer.Bus;
+import org.gstreamer.ClockTime;
 import org.gstreamer.GstObject;
 import org.gstreamer.State;
 import org.gstreamer.elements.PlayBin2;
@@ -14,17 +16,20 @@ import org.lwjgl.opengl.GL12;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.Pixmap.Format;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.BufferUtils;
 
-import daedalus.GStreamerLibrary;
-import daedalus.Root;
 import daedalus.main.GameComponent;
 import daedalus.main.GameContext;
+import daedalus.util.Util;
 
 public class Cutscene extends GameContext {
+	public static final int[] sizes = { 720, 768, 1080 };
+	
 	private int videoWidth, videoHeight;
 	private IntBuffer buffer;
 	private boolean done = false;
@@ -32,19 +37,28 @@ public class Cutscene extends GameContext {
 	private boolean dirty;
 	private final Object lock = new Object();
 
-	public Cutscene(String strToPlay) {
+	public Cutscene(String cName) {
 		try {
 			GStreamerLibrary.init();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		
 		playbin = new PlayBin2("VideoPlayer");
-
+		
 		RGBListener listener = new RGBListener();
-		playbin.setInputFile(new File(strToPlay));
+		int size = 720;
+		int Size = GameComponent.getSize();
+		for(int size_ : sizes) {
+			size = size_;
+			if(Size <= size_) {
+				break;
+			}
+		}
+		File movie = new File(Util.getWorkingDir(), "resources/movie/" + cName + "/" + cName + "_" + size + ".mp4");
+		playbin.setInputFile(movie);
 
-		RGBDataSink sink = new RGBDataSink(("sink"), listener);
+		RGBDataSink sink = new RGBDataSink("sink", listener);
 		sink.setPassDirectBuffer(true);
 
 		playbin.setVideoSink(sink);
@@ -64,9 +78,9 @@ public class Cutscene extends GameContext {
 			@Override
 			public void endOfStream(GstObject arg0) {
 				done = true;
+//				playbin.seek(ClockTime.ZERO);
 			}
 		});
-
 	}
 
 	public void preroll() {
@@ -115,13 +129,7 @@ public class Cutscene extends GameContext {
 			}
 		}
 	}
-
-	static {
-		try {
-			GStreamerLibrary.init();
-		} catch (Exception e) {
-		}
-	}
+	
 	private Texture tex;
 
 	public void init() {
@@ -129,16 +137,30 @@ public class Cutscene extends GameContext {
 	}
 
 	public void tick() {
-		// TODO Auto-generated method stub
-
 	}
 
 	public boolean isTransparent() {
 		return false;
 	}
-
+	
+	int endTimer = -1;
 	public void render(SpriteBatch sb, ShapeRenderer sr) {
-		if(isDone()) Gdx.app.exit();
+		sr.begin(ShapeType.Filled);
+		sr.setColor(0, 0, 0, 1);
+		sr.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		sr.end();
+		
+		
+		if(isDone()) {
+			if(endTimer < 0) endTimer = (int) (GameComponent.framerate);
+			else if(endTimer > 0) endTimer--;
+			else {
+				destroy();
+				GameComponent.getGame().popContext();
+			}
+			return;
+		}
+		else if(!playbin.isPlaying()) playbin.play();
 		
 		if (videoWidth == 0 || videoHeight == 0) {
 			return;
@@ -146,11 +168,16 @@ public class Cutscene extends GameContext {
 
 		synchronized (lock) {
 			if (dirty) {
+				if(tex == null) {
+					try {
+						tex = new Texture(videoWidth, videoHeight, Format.RGBA8888);
+					} catch(Exception ex) {
+						return;
+					}
+				}
 				buffer.rewind();
 				tex.bind();
-				Gdx.gl.glTexSubImage2D(GL10.GL_TEXTURE_2D, 0, 0, 0, videoWidth,
-						videoHeight, GL12.GL_BGRA,
-						GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
+				Gdx.gl.glTexSubImage2D(GL10.GL_TEXTURE_2D, 0, 0, 0, videoWidth, videoHeight, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
 				dirty = false;
 			}
 		}
@@ -162,20 +189,9 @@ public class Cutscene extends GameContext {
 			scaleFactor = (float) Display.getWidth() / (float) videoWidth;
 		}
 		sb.begin();
-		sb.draw(tex, 0, 0, videoWidth * scaleFactor, videoHeight * scaleFactor);
+		tex.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+		sb.draw(tex, (Gdx.graphics.getWidth() - videoWidth * scaleFactor) / 2,
+				(Gdx.graphics.getHeight() - videoHeight * scaleFactor) / 2, videoWidth * scaleFactor, videoHeight * scaleFactor);
 		sb.end();
-	}
-
-	public static void main(String[] args) {
-		args = new String[] { Root.class.getResource("/data/sample_h264.mp4")
-				.getFile().toString() };
-		Cutscene player = new Cutscene(args[0]);
-		player.preroll();
-		GameComponent.create("Locotus Desperatus", player.getWidth(),
-				player.getHeight(), false, false);
-		GameComponent.getGame().pushContext(player);
-		GameComponent.getGame().start();
-		GameComponent.getGame().setPaused(false);
-		player.play();
 	}
 }

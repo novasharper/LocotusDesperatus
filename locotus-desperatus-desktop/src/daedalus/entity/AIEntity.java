@@ -12,7 +12,8 @@ import daedalus.Physics;
 import daedalus.anim.Animation;
 import daedalus.anim.RotationAnimation;
 import daedalus.anim.TranslationAnimation;
-import daedalus.ld.LDMain;
+import daedalus.game.LocotusDesperatus;
+import daedalus.game.Main;
 import daedalus.level.Pathfinding;
 import daedalus.level.Tile;
 import daedalus.main.GameComponent;
@@ -28,7 +29,7 @@ public class AIEntity extends Entity {
 	protected float notOnPatrol;
 	protected double turnRateCap;
 	protected double chaseSpeedCap;
-	protected boolean friendly = true;
+	protected boolean friendly = false;
 	
 	public AIEntity() {
 		super(100, 1, true);
@@ -44,9 +45,9 @@ public class AIEntity extends Entity {
 	public void aiTick() {
 		hasLOS = false;
 		if(!friendly) {
-			if(hasLOS(LDMain.ldm.chief)) {
+			if(hasLOS(Main.game.getHero())) {
 				notOnPatrol += 2f;
-				chiefLoc = (Point2D.Double) LDMain.ldm.chief.location.clone();
+				chiefLoc = (Point2D.Double) Main.game.getHero().location.clone();
 				targetRot = Math.atan2(chiefLoc.y - location.y, chiefLoc.x - location.x);
 				while(targetRot < 0) targetRot += Math.PI * 2;
 				hasLOS = true;
@@ -57,7 +58,7 @@ public class AIEntity extends Entity {
 				if(notOnPatrol == 0) {
 					// Return to patrol
 					chiefLoc = null;
-					if(pathPoints.length > 0) {
+					if(pathPoints != null && pathPoints.length > 0) {
 						if(!canReach(new Point2D.Double(pathPoints[0].x, pathPoints[0].y))) {
 							Tile t2 = Physics.getLevel().getTile(pathPoints[0].x, pathPoints[0].y);
 							Tile t1 = Physics.getLevel().getTile((int) (Math.floor(getLoc().x)), (int) (Math.floor(getLoc().y)));
@@ -166,10 +167,10 @@ public class AIEntity extends Entity {
 	}
 	
 	public double getDrawX() {
-		return (getLoc().x - LDMain.ldm.chief.getLoc().x) * GameComponent.tileSize + Gdx.graphics.getWidth() / 2;
+		return (getLoc().x - Main.game.getHero().getLoc().x) * GameComponent.tileSize + Gdx.graphics.getWidth() / 2;
 	}
 	
 	public double getDrawY() {
-		return (getLoc().y - LDMain.ldm.chief.getLoc().y) * GameComponent.tileSize + Gdx.graphics.getHeight() / 2;
+		return (getLoc().y - Main.game.getHero().getLoc().y) * GameComponent.tileSize + Gdx.graphics.getHeight() / 2;
 	}
 }

@@ -1,10 +1,8 @@
 package daedalus.sound;
 
-public class SoundContext {
-	
-}
 
-/*
+import java.io.File;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -12,10 +10,10 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.zip.ZipFile;
 
-import kuusisto.tinysound.Music;
-import kuusisto.tinysound.Sound;
-import kuusisto.tinysound.TinySound;
-
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -33,20 +31,16 @@ public class SoundContext {
 		JsonObject obj = new JsonParser().parse(description).getAsJsonObject();
 		name = obj.get("name").getAsString();
 		for(Entry<String, JsonElement> entry : obj.get("songs").getAsJsonObject().entrySet()) {
-			ArrayList<Music> songs = new ArrayList<Music>();
 			JsonArray songArr = entry.getValue().getAsJsonArray();
 			for(int i = 0; i < songArr.size(); i++) {
-				songs.add(TinySound.loadMusic(songArr.get(i).getAsString()));
+				addSong(entry.getKey(), new File(songArr.get(i).getAsString()));
 			}
-			songMap.put(entry.getKey(), songs);
 		}
 		for(Entry<String, JsonElement> entry : obj.get("sounds").getAsJsonObject().entrySet()) {
-			ArrayList<Sound> sounds = new ArrayList<Sound>();
 			JsonArray songArr = entry.getValue().getAsJsonArray();
 			for(int i = 0; i < songArr.size(); i++) {
-				sounds.add(TinySound.loadSound(songArr.get(i).getAsString()));
+				addSound(entry.getKey(), new File(songArr.get(i).getAsString()));
 			}
-			soundMap.put(entry.getKey(), sounds);
 		}
 	}
 	
@@ -60,43 +54,50 @@ public class SoundContext {
 		return name;
 	}
 	
+	public void addSong(String key, File songFile) {
+		if(!songMap.containsKey(key)) songMap.put(key, new ArrayList<Music>());
+		ArrayList<Music> songs = songMap.get(key);
+		songs.add(SoundSystem.audio.newMusic(new FileHandle(songFile)));
+	}
+	
+	public void addSound(String key, File soundFile) {
+		if(!soundMap.containsKey(key)) soundMap.put(key, new ArrayList<Sound>());
+		ArrayList<Sound> sounds = soundMap.get(key);
+		sounds.add(SoundSystem.audio.newSound(new FileHandle(soundFile)));
+	}
+	
 	public Music getRandomSong(String groupName) {
 		ArrayList<Music> mList = songMap.get(groupName);
 		if(mList == null) return null;
-		int nextIndex = RandomSource.nextInt() % mList.size();
+		int nextIndex = RandomSource.rs.nextInt() % mList.size();
 		return mList.get(nextIndex);
 	}
 	
 	public Sound getRandomSound(String groupName) {
 		ArrayList<Sound> mList = soundMap.get(groupName);
 		if(mList == null) return null;
-		int nextIndex = RandomSource.nextInt() % mList.size();
+		int nextIndex = RandomSource.rs.nextInt() % mList.size();
 		return mList.get(nextIndex);
 	}
 	
-	public static SoundContext loadFromZip(ZipFile zf) {
+	public static SoundContext loadFromLevel(File levelDir) {
 		SoundContext ctxt = new SoundContext();
 		try {
-			InputStream jIS = zf.getInputStream(zf.getEntry("songs/songs.json"));
-			JsonObject obj = new JsonParser().parse(new InputStreamReader(jIS)).getAsJsonObject();
+			File soundDir = new File(levelDir, "songs");
+			FileReader reader = new FileReader(new File(soundDir, "songs.json"));
+			JsonObject obj = new JsonParser().parse(reader).getAsJsonObject();
 			ctxt.name = obj.get("name").getAsString();
 			for(Entry<String, JsonElement> entry : obj.get("songs").getAsJsonObject().entrySet()) {
-				ArrayList<Music> songs = new ArrayList<Music>();
 				JsonArray songArr = entry.getValue().getAsJsonArray();
 				for(int i = 0; i < songArr.size(); i++) {
-					InputStream sIS = zf.getInputStream(zf.getEntry(songArr.get(i).getAsString()));
-					songs.add(TinySound.loadMusic(sIS));
+					ctxt.addSong(entry.getKey(), new File(soundDir, entry.getKey() + "/" + songArr.get(i).getAsString()));
 				}
-				ctxt.songMap.put(entry.getKey(), songs);
 			}
 			for(Entry<String, JsonElement> entry : obj.get("sounds").getAsJsonObject().entrySet()) {
-				ArrayList<Sound> sounds = new ArrayList<Sound>();
 				JsonArray songArr = entry.getValue().getAsJsonArray();
 				for(int i = 0; i < songArr.size(); i++) {
-					InputStream sIS = zf.getInputStream(zf.getEntry(songArr.get(i).getAsString()));
-					sounds.add(TinySound.loadSound(sIS));
+					ctxt.addSound(entry.getKey(), new File(soundDir, entry.getKey() + "/" + songArr.get(i).getAsString()));
 				}
-				ctxt.soundMap.put(entry.getKey(), sounds);
 			}
 		} catch(Exception ex) {
 			return null;
@@ -104,4 +105,3 @@ public class SoundContext {
 		return ctxt;
 	}
 }
-*/

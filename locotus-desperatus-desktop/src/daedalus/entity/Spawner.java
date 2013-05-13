@@ -5,7 +5,8 @@ import java.awt.geom.Point2D;
 
 import com.badlogic.gdx.Gdx;
 
-import daedalus.ld.LDMain;
+import daedalus.game.LocotusDesperatus;
+import daedalus.game.Main;
 import daedalus.main.GameComponent;
 
 public class Spawner {
@@ -29,7 +30,7 @@ public class Spawner {
 				Entity en = toSpawn.newInstance();
 				en.setX(location.x + 0.5 + (Math.random() - 0.5) * radius * 2);
 				en.setY(location.y + 0.5 + (Math.random() - 0.5) * radius * 2);
-				LDMain.ldm.entities.add(en);
+				Main.game.getMap().addEntity(en);
 			} catch(Exception ex) {
 			}
 		} else {

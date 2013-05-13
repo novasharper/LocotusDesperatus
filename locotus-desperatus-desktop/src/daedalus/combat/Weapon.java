@@ -9,13 +9,14 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
 import daedalus.Physics;
 import daedalus.entity.Entity;
+import daedalus.game.LocotusDesperatus;
+import daedalus.game.Main;
 import daedalus.graphics.GraphicsElement;
 import daedalus.input.F310;
 import daedalus.input.GamepadEvent;
 import daedalus.input.GamepadEvent.ComponentType;
 import daedalus.input.GamepadEvent.EventType;
 import daedalus.input.IGamepadEventHandler;
-import daedalus.ld.LDMain;
 import daedalus.level.Level;
 import daedalus.level.Tile;
 import daedalus.main.GameComponent;
@@ -39,7 +40,7 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	
 	public double getRotAimbot() {
 		if(!aimAssist) return wielder.getRot();
-		for(Entity entity : LDMain.ldm.entities) {
+		for(Entity entity : Main.game.getMap().getEntities()) {
 			if(entity == wielder) continue;
 			else if(wielder.hasLOS(entity, assistRange, -1) && wielder.getLoc().distance(entity.getLoc()) <= range) {
 				double angle = Math.PI + Math.atan2(wielder.getDrawY() - entity.getDrawY(), wielder.getDrawX() - entity.getDrawX());
@@ -55,7 +56,7 @@ public abstract class Weapon implements GraphicsElement, IGamepadEventHandler {
 	public void fire() {
 		Entity target = null;
 		double cd = 0;
-		for(Entity entity : LDMain.ldm.entities) {
+		for(Entity entity : Main.game.getMap().getEntities()) {
 			double nd = wielder.getLoc().distance(entity.getLoc());
 			if(wielder.hasLOS(entity, Math.PI / 48, getRotAimbot()) && wielder.getLoc().distance(entity.getLoc()) <= range) {
 				if((target == null || nd < cd) && nd * GameComponent.tileSize > 10) {
